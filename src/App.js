@@ -38,7 +38,9 @@ class App extends Component {
     var notes = {...this.state.notes}
     Object.keys(notes).map((k) => {
       notes[k].selected = false;
-      notes[k].zindex--;
+      if(notes[k].zindex > 0){
+          notes[k].zindex--;
+      }
     })
     notes[`note-${Date.now()}`] = n;
     this.setState({ notes });
@@ -53,6 +55,9 @@ class App extends Component {
   }
 
   selectNote(key){
+    if(this.state.notes[key].selected){
+      return;
+    }
     var notes = {...this.state.notes};
     Object.keys(notes).map((k) => {
       if(k === key){
@@ -61,7 +66,10 @@ class App extends Component {
       }
       else{
         notes[k].selected = false;
-        notes[k].zindex--;
+        if(notes[k].zindex > 0){
+          notes[k].zindex--;
+        }
+        
       }
     })
     this.setState({notes})
