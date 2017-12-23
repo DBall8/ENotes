@@ -27,13 +27,12 @@ h1{
 .noteHead{
   background: yellow;
   border-radius: 5px 5px 0px 0px;
- height: 20%;
+ height: 40px;
  margin: 0;
  padding: 0;
 }
 
 .noteBody{
-  height: 80%;
   margin: 0;
   padding: 0;
 }
@@ -71,6 +70,7 @@ input, textarea{
 .noteContent{
   width: 100%;
   height: 100%;
+  display: inline-block;
   padding: 5px;
   border: none;
   outline: none;
