@@ -32,7 +32,7 @@ class Note extends React.Component{
 							height: this.props.note.height,
 							left: this.props.note.x,
 							top: this.props.note.y,
-							zIndex: this.props.note.selected? '9999': '1'
+							zIndex: this.props.note.zindex
 							}}
 				onMouseDown={(e) => this.select(e)}>
 				<div className={"noteHead " + (this.props.note.selected? 'orange': 'yellow')} 

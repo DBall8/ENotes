@@ -34,12 +34,13 @@ class App extends Component {
   addNote(x, y){
     var n = new note('', '', x, y, 300, 200);
     n.selected = true;
+    n.zindex = 9999;
     var notes = {...this.state.notes}
     Object.keys(notes).map((k) => {
       notes[k].selected = false;
+      notes[k].zindex--;
     })
-    var key = `note-${Date.now()}`;
-    notes[key] = n;
+    notes[`note-${Date.now()}`] = n;
     this.setState({ notes });
     
   }
@@ -56,9 +57,11 @@ class App extends Component {
     Object.keys(notes).map((k) => {
       if(k === key){
         notes[k].selected = true;
+        notes[k].zindex = 9999;
       }
       else{
         notes[k].selected = false;
+        notes[k].zindex--;
       }
     })
     this.setState({notes})
