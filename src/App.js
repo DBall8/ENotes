@@ -12,7 +12,6 @@ class App extends Component {
     this.deleteNote = this.deleteNote.bind(this);
     this.selectNote = this.selectNote.bind(this);
     this.dragStart = this.dragStart.bind(this);
-    this.dragEnd = this.dragEnd.bind(this);
 
     this.state = {
       notes: {}
@@ -34,9 +33,15 @@ class App extends Component {
 
   addNote(x, y){
     var n = new note('', '', x, y, 300, 200);
+    n.selected = true;
     var notes = {...this.state.notes}
-    notes[`note-${Date.now()}`] = n;
-    this.setState({ notes })
+    Object.keys(notes).map((k) => {
+      notes[k].selected = false;
+    })
+    var key = `note-${Date.now()}`;
+    notes[key] = n;
+    this.setState({ notes });
+    
   }
 
   deleteNote(key){
@@ -96,7 +101,6 @@ class App extends Component {
             deleteNote={this.deleteNote}
             selectNote={this.selectNote}
             dragStart={this.dragStart}
-            dragEnd={this.dragEnd}
           />  
         )
 
