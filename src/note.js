@@ -13,6 +13,11 @@ class Note extends React.Component{
 		this.props.deleteNote(this.props.tag);
 	}
 
+	updateNote(e){
+		console.log(this.contentArea.value);
+		this.props.updateNote(this.props.tag, this.contentArea.value)
+	}
+
 	select(e){
 		this.props.selectNote(this.props.tag);
 	}
@@ -27,7 +32,7 @@ class Note extends React.Component{
 			return null;
 		}
 		return(
-			<div className="note" ref={(input) => this.notediv = input} style={{
+			<div className="note" style={{
 							width: this.props.note.width,
 							height: this.props.note.height,
 							left: this.props.note.x,
@@ -42,7 +47,10 @@ class Note extends React.Component{
 					<button className="deleteButton" onClick={(e) => this.deleteNote(e)}>x</button>
 				</div>
 				<div className="noteBody" style={{height: this.props.note.height - 40}}>
-					<textarea className="noteContent" defaultValue={this.props.note.content} />
+					<textarea className="noteContent" 
+						ref={(input) => this.contentArea = input}
+						defaultValue={this.props.note.content}
+						onInput={(e) => this.updateNote(e)} />
 				</div>
 			</div>
 		);

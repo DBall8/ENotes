@@ -18,8 +18,6 @@ var db = new sql.Database('./data.db', sql.OPEN_READWRITE, function(err){
 var server = http.createServer(function (req, res){
     var uri = url.parse(req.url)
 
-    console.log("METHOD = " + req.method);
-
 	switch(uri.pathname){
 		case '/':
 			sendFile(res, 'build/index.html');
@@ -32,7 +30,14 @@ var server = http.createServer(function (req, res){
 				case 'GET':
 					getNotes(uri, res);
 					break;
+				case 'DELETE':
+					deleteNote(uri);
+					break;
+				case 'PUT':
+					updateNote(req);
+					break;
 				default:
+					console.log("METHOD: " + req.method)
 			}
 			break;
 		default:
@@ -65,22 +70,59 @@ function addNote(req) {
 
 		var input = JSON.parse(data);
 
-        var values = ['aaaaaa', input.content, input.x, input.y, input.width, input.height, input.zindex]
+        var values = ['aaaaaa', input.tag, input.content, input.x, input.y, input.width, input.height, input.zindex]
 
         console.log(values)
  
 		db.serialize(function(){
-            db.run('INSERT INTO notes VALUES ((?), (?), (?), (?), (?), (?), (?))', values, function (err) {
+            db.run('INSERT INTO notes VALUES ((?), (?), (?), (?), (?), (?), (?), (?))', values, function (err) {
                 if (err) {
                     console.error("Could not insert new note:")
                     console.error(err)
-                }   
+                } 
+                else{
+                	console.log(input.tag + " successfully added")
+                }
             });
 		})
 	})
 }
 
 var key = 'aaaaaa';
+
+function deleteNote(uri){
+	console.log("IN DELETE");
+	var input = qs.parse(uri.query);
+
+	db.run("DELETE FROM notes WHERE key=(?) AND tag=(?)", [key, input.tag], function(err){
+		if(err){
+			console.error("ERROR Could not delete note:\n" + err);
+		}
+		else{
+			console.log(input.tag + " successfully deleted")
+		}
+	})
+}
+
+function updateNote(req){
+	console.log("RECEIVED UPDATE")
+	var data = '';
+	req.on('data', (d) => data += d);
+	req.on('end', () => {
+		console.log(data)
+		var input = JSON.parse(data);
+		console.log(input);
+
+		db.serialize(() =>{
+			db.run("UPDATE notes SET content=(?) WHERE key=(?) AND tag=(?)", [input.newcontent, key, input.tag], function(err){
+				if(err){
+					console.error("ERROR could not update note" + input.tag + ":\n" + err);
+				}
+			})
+		})
+	})
+}
+
 
 function getNotes(uri, res){
 	var input = qs.parse(uri.query);
