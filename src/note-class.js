@@ -1,6 +1,5 @@
 export default class note{
-	constructor(title, content, x, y, width, height){
-		this.title = title;
+	constructor(content, x, y, width, height){
 		this.content = content;
 		this.x = x;
 		this.y = y;
