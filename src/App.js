@@ -27,47 +27,41 @@ class App extends Component {
     window.addEventListener('mousemove', (event) => this.dragDuring(event));
 
     this.getNotes();
-
-    if(Object.keys(this.state.notes).length <= 0){
-      this.addNote(100, 100);
-    }
-
   }
 
   getNotes(){
-    fetch("/api?key=a6f7a67sf")
+    fetch("/api")
     .then((res) => {return res.json()})
-    .then((data) => this.loadNotes(data));
+        .then((data) => {
+            this.loadNotes(data);
+            if (Object.keys(this.state.notes).length <= 0) {
+                console.log("HERE");
+                this.addNote(100, 100);
+            }
+        });
   }
 
   loadNotes(data){
 
     var notes = {}
-    var date, lastDate;
+    var date = Date.now();
 
     data.map((anote) => {
 
       var n = new note(anote.content, anote.x, anote.y, anote.width, anote.height);
       n.zindex = anote.zindex;
 
-      date = Date.now();
-      
-      if(date == lastDate){
-        date++;
-      }
-      lastDate = date;
-
       notes[`note-${date}`] = n;
+
+      date++;
       
     })
+    
     this.setState({ notes })
   }
 
-  anotherLoad(notes){
-    this.setState
-  }
-
-  addNote(x, y){
+  addNote(x, y) {
+      console.log("ADD");
     var n = new note('', x, y, 300, 200);
     n.selected = true;
     n.zindex = 9999;
@@ -80,6 +74,18 @@ class App extends Component {
     })
     notes[`note-${Date.now()}`] = n;
     this.setState({ notes });
+
+    fetch("/api", {
+        method: "POST",
+        body: JSON.stringify({
+            content: n.content,
+            x: n.x,
+            y: n.y,
+            width: n.width,
+            height: n.height,
+            zindex: n.zindex
+        })
+    })
     
   }
 
@@ -88,6 +94,12 @@ class App extends Component {
     notes[key] = null;
     delete(notes[key]);
     this.setState({ notes });
+  }
+
+  updateNote(key, newcontent) {
+      var notes = { ...this.state.notes };
+      var note = notes[key];
+      note.content = newcontent;
   }
 
   selectNote(key){

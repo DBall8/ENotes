@@ -16,14 +16,15 @@ var db = new sql.Database('./data.db', sql.OPEN_READWRITE, function(err){
 })
 
 var server = http.createServer(function (req, res){
-	var uri = url.parse(req.url)
+    var uri = url.parse(req.url)
+
+    console.log("METHOD = " + req.method);
 
 	switch(uri.pathname){
 		case '/':
 			sendFile(res, 'build/index.html');
 			break;
 		case '/api':
-			console.log("Hello")
 			switch(req.method){
 				case 'POST':
 					addNote(req);
@@ -55,41 +56,40 @@ server.listen(port);
 console.log('Listening on :' + port);
 
 
-function addNote(req){
+function addNote(req) {
+    console.log("IN ADD");
 	var data = '';
 	req.on('data', (d) => data += d);
 	req.on('end', () => {
 		console.log(data);
 
-		var input = url.parse(data);
+		var input = JSON.parse(data);
 
-		var insert = '';
-		insert += input.content + ', '
-		insert += input.x + ', '
-		insert += input.y + ', '
-		insert += input.width + ', '
-		insert += input.height + ', '
-		insert += input.selected + ', '
-		insert += input.zindex;
+        var values = ['aaaaaa', input.content, input.x, input.y, input.width, input.height, input.zindex]
+
+        console.log(values)
  
 		db.serialize(function(){
-			db.run('INSERT INTO notes VALUES (' + insert + ')');
+            db.run('INSERT INTO notes VALUES ((?), (?), (?), (?), (?), (?), (?))', values, function (err) {
+                if (err) {
+                    console.error("Could not insert new note:")
+                    console.error(err)
+                }   
+            });
 		})
 	})
 }
 
+var key = 'aaaaaa';
+
 function getNotes(uri, res){
-	console.log("HELLO")
 	var input = qs.parse(uri.query);
 	var result = [];
-	db.each("SELECT * FROM notes WHERE key=(?)", [input.key], function(error, row){
+	db.each("SELECT * FROM notes WHERE key=(?)", [key], function(error, row){
 		result.push(row);
 	}, function(){
-		res.writeHead(200, {'Content-type': 'application/json', 'Access-Controll-Allow-Origin': 'http://localhost:3000'});
+		res.writeHead(200, {'Content-type': 'application/json'});
 		res.end(JSON.stringify(result))
-
-		console.log("SENDING:")
-		console.log(JSON.stringify(result));
 	})
 }
 
