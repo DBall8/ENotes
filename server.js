@@ -25,16 +25,16 @@ var server = http.createServer(function (req, res){
 		case '/api':
 			switch(req.method){
 				case 'POST':
-					addNote(req);
+					addNote(req, res);
 					break;
 				case 'GET':
 					getNotes(uri, res);
 					break;
 				case 'DELETE':
-					deleteNote(uri);
+					deleteNote(uri,res);
 					break;
 				case 'PUT':
-					updateNote(req);
+					updateNote(req, res);
 					break;
 				default:
 					console.log("METHOD: " + req.method)
@@ -61,7 +61,7 @@ server.listen(port);
 console.log('Listening on :' + port);
 
 
-function addNote(req) {
+function addNote(req, res) {
     console.log("IN ADD");
 	var data = '';
 	req.on('data', (d) => data += d);
@@ -79,10 +79,13 @@ function addNote(req) {
                 if (err) {
                     console.error("Could not insert new note:")
                     console.error(err)
+                    res.writeHead(500);
                 } 
                 else{
                 	console.log(input.tag + " successfully added")
+                	res.writeHead(200);
                 }
+                res.end();
             });
 		})
 	})
@@ -90,34 +93,42 @@ function addNote(req) {
 
 var key = 'aaaaaa';
 
-function deleteNote(uri){
+function deleteNote(uri, res){
 	console.log("IN DELETE");
 	var input = qs.parse(uri.query);
 
 	db.run("DELETE FROM notes WHERE key=(?) AND tag=(?)", [key, input.tag], function(err){
 		if(err){
 			console.error("ERROR Could not delete note:\n" + err);
+			res.writeHead(500)
 		}
 		else{
 			console.log(input.tag + " successfully deleted")
+			res.writeHead(200)
 		}
+		res.end();
 	})
 }
 
-function updateNote(req){
+function updateNote(req, res){
 	console.log("RECEIVED UPDATE")
 	var data = '';
 	req.on('data', (d) => data += d);
 	req.on('end', () => {
-		console.log(data)
 		var input = JSON.parse(data);
-		console.log(input);
+
+		var arr = [input.newcontent, input.newx, input.newy, input.newW, input.newH, input.newZ, key, input.tag]
 
 		db.serialize(() =>{
-			db.run("UPDATE notes SET content=(?) WHERE key=(?) AND tag=(?)", [input.newcontent, key, input.tag], function(err){
+			db.run("UPDATE notes SET content=(?), x=(?), y=(?), width=(?), height=(?), zindex=(?) WHERE key=(?) AND tag=(?)", arr, function(err){
 				if(err){
 					console.error("ERROR could not update note" + input.tag + ":\n" + err);
+					res.writeHead(500)
 				}
+				else{
+					res.writeHead(200)
+				}
+				res.end();
 			})
 		})
 	})

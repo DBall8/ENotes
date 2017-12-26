@@ -14,10 +14,12 @@ class App extends Component {
     this.updateNote = this.updateNote.bind(this);
     this.selectNote = this.selectNote.bind(this);
     this.dragStart = this.dragStart.bind(this);
+    this.markUnsaved = this.markUnsaved.bind(this);
 
     // watch the state of each note
     this.state = {
-      notes: {}
+      notes: {},
+      unsaved: false
     }
 
     // object to hold info about the dragging note
@@ -30,8 +32,32 @@ class App extends Component {
     window.addEventListener('mouseup', (event) => this.dragEnd(event)); // listen for drag ends
     window.addEventListener('mousemove', (event) => this.dragDuring(event)); // listen for drag movements
 
+    
+
     // load notes from DB
     this.getNotes();
+  }
+
+  componentDidMount(){
+    window.setInterval(() => {
+      console.log("UNSAVED? " + this.state.unsaved);
+      if(this.state.unsaved){
+        this.setState((prevstate) => {
+          return {
+            notes: prevstate.notes,
+            unsaved: false
+          }
+        })
+        var notes = {...this.state.notes}
+        Object.keys(this.state.notes).map((t) =>{
+          if(!notes[t].saved){
+            this.updateNote(t);
+          }    
+        })
+
+      }
+      
+    }, 1000)
   }
 
   // ask server for notes
@@ -54,8 +80,6 @@ class App extends Component {
 
     // start building new notes object for the state
     var notes = {}
-    // to avoid repeate tags, just grab date and increment from there
-    var date = Date.now(); 
 
     // add a new note class for each object
     data.map((anote) => {
@@ -64,13 +88,16 @@ class App extends Component {
       n.zindex = anote.zindex;
       // insert to notes
       notes[anote.tag] = n;
-
-      date++;
       
     })
     
     // use notes as state
-    this.setState({ notes })
+    this.setState((prevstate) => {
+      return {
+        notes: notes,
+        unsaved: prevstate.unsaved
+      }
+    })
   }
 
   // Adds a new note
@@ -92,7 +119,12 @@ class App extends Component {
     // add to state with time since epoch as a tag
     var t = `note-${Date.now()}`
     notes[t] = n;
-    this.setState({ notes });
+    this.setState((prevstate) => {
+      return {
+        notes: notes,
+        unsaved: prevstate.unsaved
+      }
+    })
 
     // update DB
     fetch("/api", {
@@ -106,7 +138,13 @@ class App extends Component {
             height: n.height,
             zindex: n.zindex
         })
-    })
+    }).then((result) => {
+      if(result.status != 200){
+        console.log("ERROR: Server response: " + result.status)
+        console.log(result.statusText);
+      }
+      return;
+    });
     
   }
 
@@ -115,27 +153,53 @@ class App extends Component {
     var notes = {...this.state.notes}
     notes[tag] = null;
     delete(notes[tag]);
-    this.setState({ notes });
+    this.setState((prevstate) => {
+      return {
+        notes: notes,
+        unsaved: prevstate.unsaved
+      }
+    })
 
     // update DB
     fetch("/api?tag=" + tag, {
         method: "DELETE",
-    })
+    }).then((result) => {
+      if(result.status != 200){
+        console.log("ERROR: Server response: " + result.status)
+        console.log(result.statusText);
+      }
+    });
   }
 
-  updateNote(tag, newcontent) {
+  updateNote(tag) {
     var notes = { ...this.state.notes };
-    notes[tag].content = newcontent;
-    this.setState( {notes} )
+    var note = notes[tag];
 
-      // update DB
+    console.log("UPDATING")
+    console.log(this.state.unsaved)
+
+    // update DB
+      
     fetch("/api", {
         method: "PUT",
         body: JSON.stringify({
           tag: tag,
-          newcontent: newcontent
+          newcontent: note.content,
+          newx: note.x,
+          newy: note.y,
+          newW: note.width,
+          newH: note.height,
+          newZ: note.zindex
         })
-    })
+    }).then((result) => {
+      if(result.status != 200){
+        console.log("ERROR: Server response: " + result.status)
+        console.log(result.statusText);
+      }
+      else{
+        note.saved = true;
+      }
+    });
   }
 
   // Select a note
@@ -162,7 +226,12 @@ class App extends Component {
       }
     })
     // update state
-    this.setState({notes})
+    this.setState((prevstate) => {
+      return {
+        notes: notes,
+        unsaved: prevstate.unsaved
+      }
+    })
   }
 
   // start dragging a note
@@ -187,7 +256,12 @@ class App extends Component {
     note.x = e.screenX - this.drag.offsetX;
     note.y = e.screenY - this.drag.offsetY;
     // update state
-    this.setState({ notes });
+    this.setState((prevstate) => {
+      return {
+        notes: notes,
+        unsaved: prevstate.unsaved
+      }
+    })
   }
 
   // stops a dragging note
@@ -196,7 +270,17 @@ class App extends Component {
       return;
     }
 
+    this.updateNote(this.drag.tag)
     this.drag = {};
+  }
+
+  markUnsaved(){
+    this.setState((prevstate) =>{
+      return {
+        notes: prevstate.notes,
+        unsaved: true
+      }
+    })
   }
 
   // draws the App
@@ -214,6 +298,7 @@ class App extends Component {
             updateNote={this.updateNote}
             selectNote={this.selectNote}
             dragStart={this.dragStart}
+            markUnsaved={this.markUnsaved}
           />  
         )
 

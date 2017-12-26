@@ -7,5 +7,6 @@ export default class note{
 		this.height = height;
 		this.selected = false;
 		this.zindex = 9000;
+		this.saved = true;
 	}
 }

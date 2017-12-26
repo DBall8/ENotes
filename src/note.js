@@ -14,7 +14,7 @@ class Note extends React.Component{
 	}
 
 	updateNote(e){
-		console.log(this.contentArea.value);
+		this.props.note.content = this.contentArea.value;
 		this.props.updateNote(this.props.tag, this.contentArea.value)
 	}
 
@@ -25,6 +25,13 @@ class Note extends React.Component{
 	dragStart(e){
 		e.preventDefault();
 		this.props.dragStart(this.props.tag, e.screenX, e.screenY);
+	}
+
+	inputEvent(e){
+		this.props.note.content = this.contentArea.value;
+		this.props.note.saved = false;
+		this.props.markUnsaved();
+		console.log("INPUT")
 	}
 
 	render(){
@@ -50,7 +57,8 @@ class Note extends React.Component{
 					<textarea className="noteContent" 
 						ref={(input) => this.contentArea = input}
 						defaultValue={this.props.note.content}
-						onInput={(e) => this.updateNote(e)} />
+						onBlur={(e) => this.updateNote(e)} 
+						onInput={(e) => this.inputEvent(e)} />
 				</div>
 			</div>
 		);
