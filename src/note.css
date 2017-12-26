@@ -69,11 +69,9 @@ input, textarea {
 }
 
 .resize {
-    background-image: url('./resize.png');
-    width: 16px;
-    height: 16px;
+    image-rendering: crisp-edges;
+    image-resolution: from-image;
     position: relative;
-
     margin: 0;
     padding: 0;
 }

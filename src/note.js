@@ -1,5 +1,6 @@
 import React from 'react';
 
+import resizeIm from './resize.png'
 import './note.css';
 
 class Note extends React.Component{
@@ -70,12 +71,12 @@ class Note extends React.Component{
                         onInput={(e) => this.inputEvent(e)} />
                     
                 </div>
-                <div className="resize" style={{
+                <img src={resizeIm} alt="Drag to resize" className="resize" style={{
                     left: this.props.note.width - 18,
                     top: -8
                 }}
                     onMouseDown={(e) => this.startResize(e)}>
-                </div>
+                </img>
 			</div>
 		);
 	}
