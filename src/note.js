@@ -47,13 +47,14 @@ class Note extends React.Component{
 		}
 		return(
 			<div className="note" style={{
-							width: this.props.note.width,
-							height: this.props.note.height,
-							left: this.props.note.x,
-							top: this.props.note.y,
-							zIndex: this.props.note.zindex
-							}}
-				onMouseDown={(e) => this.select(e)}>
+				width: this.props.note.width,
+				height: this.props.note.height,
+				left: this.props.note.x,
+				top: this.props.note.y,
+				zIndex: this.props.note.zindex
+				}}
+            onMouseDown={(e) => this.select(e)}>
+
 				<div className={"noteHead " + (this.props.note.selected? 'orange': 'yellow')} 
 					onMouseDown={(e) => this.dragStart(e)} 
 				>
@@ -61,7 +62,8 @@ class Note extends React.Component{
 					<button className="deleteButton" onClick={(e) => this.deleteNote(e)}>x</button>
 				</div>
 				<div className="noteBody" style={{height: this.props.note.height - 40}}>
-					<textarea className="noteContent" 
+                    <textarea className="noteContent" 
+                        spellCheck="false"
 						ref={(input) => this.contentArea = input}
 						defaultValue={this.props.note.content}
 						onBlur={(e) => this.updateNote(e)} 
