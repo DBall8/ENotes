@@ -1,5 +1,7 @@
 import React from 'react';
 
+import './note.css';
+
 class Note extends React.Component{
 
 	addNote(e){
@@ -25,7 +27,12 @@ class Note extends React.Component{
 	dragStart(e){
 		e.preventDefault();
 		this.props.dragStart(this.props.tag, e.screenX, e.screenY);
-	}
+    }
+
+    startResize(e) {
+        e.preventDefault();
+        this.props.resizeStart(this.props.tag, e.screenX, e.screenY);
+    }
 
 	inputEvent(e){
 		this.props.note.content = this.contentArea.value;
@@ -58,8 +65,15 @@ class Note extends React.Component{
 						ref={(input) => this.contentArea = input}
 						defaultValue={this.props.note.content}
 						onBlur={(e) => this.updateNote(e)} 
-						onInput={(e) => this.inputEvent(e)} />
-				</div>
+                        onInput={(e) => this.inputEvent(e)} />
+                    
+                </div>
+                <div className="resize" style={{
+                    left: this.props.note.width - 18,
+                    top: -8
+                }}
+                    onMouseDown={(e) => this.startResize(e)}>
+                </div>
 			</div>
 		);
 	}
