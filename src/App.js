@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
-import Note from './note';
-import note from './note-class';
+import Note from './note/note';
+import note from './note/note-class';
+import RightClickMenu from './right-click-menu/rightClickMenu';
 import './App.css';
 
 class App extends Component {
@@ -16,12 +17,16 @@ class App extends Component {
     this.dragStart = this.dragStart.bind(this);
     this.resizeStart = this.resizeStart.bind(this);
     this.markUnsaved = this.markUnsaved.bind(this);
+    this.launchOptions = this.launchOptions.bind(this);
 
     // watch the state of each note
     this.state = {
       notes: {},
-      unsaved: false
+      rightClickMenu:  {note: '', display: 'none', x: 0, y: 0}
+
     }
+
+    this.unsaved = false;
 
     // object to hold info about the dragging note
     this.drag = {};
@@ -29,11 +34,45 @@ class App extends Component {
 
   }
 
+  // STATE MANAGEMENT FUNCTIONS
+  setNoteState(notes){
+    this.setState((prevstate) => {
+      return {
+        notes: notes,
+        rightClickMenu: prevstate.rightClickMenu
+      }
+    })
+  }
+
+  setRightMenuState(obj){
+    this.setState((prevstate) => {
+      return {
+        notes: prevstate.notes,
+        rightClickMenu: obj
+      }
+    })
+  }
+
+  // LIFE CYCLE FUNCTIONS
+
   componentWillMount(){
 
+      window.addEventListener('mousedown', (event) => {
+        if(this.state.rightClickMenu.note){
+            console.log("HI")
+            var obj = {
+              note: '',
+              display: 'none',
+              x: 0,
+              y: 0
+            }
+            this.setRightMenuState(obj)
+          }
+      })
       window.addEventListener('mouseup', (event) => {
           this.dragEnd(event)
           this.resizeEnd(event)
+
       }); // listen for drag ends
       window.addEventListener('mousemove', (event) => {
           this.dragDuring(event)
@@ -48,13 +87,8 @@ class App extends Component {
 
   componentDidMount(){
     window.setInterval(() => {
-      if(this.state.unsaved){
-        this.setState((prevstate) => {
-          return {
-            notes: prevstate.notes,
-            unsaved: false
-          }
-        })
+      if(this.unsaved){
+        this.unsaved = false;
         var notes = {...this.state.notes}
         Object.keys(this.state.notes).map((t) =>{
           if(!notes[t].saved){
@@ -67,6 +101,8 @@ class App extends Component {
       
     }, 1000)
   }
+
+  // DATA MANAGEMENT FUNCTIONS
 
   // ask server for notes
   getNotes(){
@@ -107,12 +143,7 @@ class App extends Component {
     })
     
     // use notes as state
-    this.setState((prevstate) => {
-      return {
-        notes: notes,
-        unsaved: prevstate.unsaved
-      }
-    })
+    this.setNoteState(notes);
   }
 
   // Adds a new note
@@ -135,12 +166,7 @@ class App extends Component {
     // add to state with time since epoch as a tag
     var t = `note-${Date.now()}`
     notes[t] = n;
-    this.setState((prevstate) => {
-      return {
-        notes: notes,
-        unsaved: prevstate.unsaved
-      }
-    })
+    this.setNoteState(notes);
 
       /* FETCH
     // update DB
@@ -172,12 +198,7 @@ class App extends Component {
     var notes = {...this.state.notes}
     notes[tag] = null;
     delete(notes[tag]);
-    this.setState((prevstate) => {
-      return {
-        notes: notes,
-        unsaved: prevstate.unsaved
-      }
-    })
+    this.setNoteState(notes);
 
     // update DB
       /* FETCH
@@ -197,7 +218,7 @@ class App extends Component {
     var note = notes[tag];
 
     console.log("UPDATING")
-    console.log(this.state.unsaved)
+    console.log(this.unsaved)
 
     // update DB
       /* FETCH
@@ -249,12 +270,7 @@ class App extends Component {
       return;
     })
     // update state
-    this.setState((prevstate) => {
-      return {
-        notes: notes,
-        unsaved: prevstate.unsaved
-      }
-    })
+    this.setNoteState(notes);
   }
 
   // start dragging a note
@@ -279,12 +295,7 @@ class App extends Component {
     note.x = e.screenX - this.drag.offsetX;
     note.y = e.screenY - this.drag.offsetY;
     // update state
-    this.setState((prevstate) => {
-      return {
-        notes: notes,
-        unsaved: prevstate.unsaved
-      }
-    })
+    this.setNoteState(notes);
   }
 
   // stops a dragging note
@@ -318,12 +329,7 @@ class App extends Component {
     note.height += e.screenY - this.resize.startY;
     this.resize.startY = e.screenY;
     // update state
-    this.setState((prevstate) => {
-        return {
-            notes: notes,
-            unsaved: prevstate.unsaved
-        }
-    })
+    this.setNoteState(notes);
   }
 
   resizeEnd(e) {
@@ -336,12 +342,18 @@ class App extends Component {
   }
 
   markUnsaved(){
-    this.setState((prevstate) =>{
-      return {
-        notes: prevstate.notes,
-        unsaved: true
-      }
-    })
+    this.unsaved = true;
+  }
+
+  launchOptions(tag, x, y){
+    var obj = this.state.rightClickMenu;
+
+    obj.note = tag;
+    obj.display = 'block';
+    obj.x = x;
+    obj.y = y;
+
+    this.setRightMenuState(obj);
   }
 
   // draws the App
@@ -361,10 +373,14 @@ class App extends Component {
             dragStart={this.dragStart}
             resizeStart={this.resizeStart}
             markUnsaved={this.markUnsaved}
+
+            launchOptions={this.launchOptions}
           />  
         )
-
         }
+        <RightClickMenu 
+          obj={this.state.rightClickMenu}
+        />
       </div>
     );
   }

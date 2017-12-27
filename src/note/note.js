@@ -1,6 +1,6 @@
 import React from 'react';
 
-import resizeIm from './resize.png'
+import resizeIm from '../resources/resize.png'
 import './note.css';
 
 class Note extends React.Component{
@@ -42,6 +42,13 @@ class Note extends React.Component{
 		console.log("INPUT")
 	}
 
+	rightClick(e){
+		if(e.button == 2){
+			console.log("RIGHT CLICK")
+			this.props.launchOptions(this.props.tag, e.clientX, e.clientY);
+		}
+	}
+
 	render(){
 		if(this.props.note == null){
 			return null;
@@ -54,7 +61,9 @@ class Note extends React.Component{
 				top: this.props.note.y,
 				zIndex: this.props.note.zindex
 				}}
-            onMouseDown={(e) => this.select(e)}>
+            onMouseDown={(e) => this.select(e)}
+            onMouseUp={(e) => this.rightClick(e)}
+            onContextMenu={(e) => e.preventDefault()}>
 
 				<div className={"noteHead " + (this.props.note.selected? 'orange': 'yellow')} 
 					onMouseDown={(e) => this.dragStart(e)} 
@@ -73,7 +82,7 @@ class Note extends React.Component{
                 </div>
                 <img src={resizeIm} alt="Drag to resize" className="resize" style={{
                     left: this.props.note.width - 18,
-                    top: -8
+                    top: -14
                 }}
                     onMouseDown={(e) => this.startResize(e)}>
                 </img>
