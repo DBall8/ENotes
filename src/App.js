@@ -1,389 +1,98 @@
-import React, { Component } from 'react';
-import Note from './note/note';
-import note from './note/note-class';
-import RightClickMenu from './right-click-menu/rightClickMenu';
-import './App.css';
+import React from 'react';
+import Cookie from 'universal-cookie';
 
-class App extends Component {
-
-  constructor(){
-    super();
-
-    // bind functions for each Note component
-    this.addNote = this.addNote.bind(this);
-    this.deleteNote = this.deleteNote.bind(this);
-    this.updateNote = this.updateNote.bind(this);
-    this.selectNote = this.selectNote.bind(this);
-    this.dragStart = this.dragStart.bind(this);
-    this.resizeStart = this.resizeStart.bind(this);
-    this.markUnsaved = this.markUnsaved.bind(this);
-    this.launchOptions = this.launchOptions.bind(this);
-
-    // watch the state of each note
-    this.state = {
-      notes: {},
-      rightClickMenu:  {note: '', display: 'none', x: 0, y: 0}
-
-    }
-
-    this.unsaved = false;
-
-    // object to hold info about the dragging note
-    this.drag = {};
-    this.resize = {};
-
-  }
-
-  // STATE MANAGEMENT FUNCTIONS
-  setNoteState(notes){
-    this.setState((prevstate) => {
-      return {
-        notes: notes,
-        rightClickMenu: prevstate.rightClickMenu
-      }
-    })
-  }
-
-  setRightMenuState(obj){
-    this.setState((prevstate) => {
-      return {
-        notes: prevstate.notes,
-        rightClickMenu: obj
-      }
-    })
-  }
-
-  // LIFE CYCLE FUNCTIONS
-
-  componentWillMount(){
-
-      window.addEventListener('mousedown', (event) => {
-        if(this.state.rightClickMenu.note){
-            console.log("HI")
-            var obj = {
-              note: '',
-              display: 'none',
-              x: 0,
-              y: 0
-            }
-            this.setRightMenuState(obj)
-          }
-      })
-      window.addEventListener('mouseup', (event) => {
-          this.dragEnd(event)
-          this.resizeEnd(event)
-
-      }); // listen for drag ends
-      window.addEventListener('mousemove', (event) => {
-          this.dragDuring(event)
-          this.resizeDuring(event)
-      }); // listen for drag movements
-
-    
-
-    // load notes from DB
-    this.getNotes();
-  }
-
-  componentDidMount(){
-    window.setInterval(() => {
-      if(this.unsaved){
-        this.unsaved = false;
-        var notes = {...this.state.notes}
-        Object.keys(this.state.notes).map((t) =>{
-          if(!notes[t].saved){
-            this.updateNote(t);
-          }
-          return;
-        })
-
-      }
-      
-    }, 1000)
-  }
-
-  // DATA MANAGEMENT FUNCTIONS
-
-  // ask server for notes
-  getNotes(){
-
-    // fetch from /api
-      /* FETCH
-    fetch("/api")
-    .then((res) => {return res.json()}) // turn result to json (??)
-        .then((data) => {
-            this.loadNotes(data); // load note
-            // if no notes were loaded, create a new one
-            if (Object.keys(this.state.notes).length <= 0) {
-                this.addNote(100, 100);
-            }
-        });
-      FETCH */
-
-      // FETCH REMOVE
-      if (Object.keys(this.state.notes).length <= 0) {
-          this.addNote(300, 300);
-      }
-  }
-
-  // load notes from an array of objects
-  loadNotes(data){
-
-    // start building new notes object for the state
-    var notes = {}
-
-    // add a new note class for each object
-    data.map((anote) => {
-      // build note class
-      var n = new note(anote.content, anote.x, anote.y, anote.width, anote.height);
-      n.zindex = anote.zindex;
-      // insert to notes
-      notes[anote.tag] = n;
-      return;
-    })
-    
-    // use notes as state
-    this.setNoteState(notes);
-  }
-
-  // Adds a new note
-  addNote(x, y) {
-    // build empty note
-    var n = new note('', x, y, 300, 200);
-    n.selected = true; //start selected
-    n.zindex = 9999; // start on top
-
-    // unselect all other notes
-    var notes = {...this.state.notes}
-    Object.keys(notes).map((k) => {
-      notes[k].selected = false;
-      if(notes[k].zindex > 0){
-          notes[k].zindex--;
-      }
-      return;
-    })
-
-    // add to state with time since epoch as a tag
-    var t = `note-${Date.now()}`
-    notes[t] = n;
-    this.setNoteState(notes);
-
-      /* FETCH
-    // update DB
-    fetch("/api", {
-        method: "POST",
-        body: JSON.stringify({
-            tag: t,
-            content: n.content,
-            x: n.x,
-            y: n.y,
-            width: n.width,
-            height: n.height,
-            zindex: n.zindex
-        })
-    }).then((result) => {
-      if(result.status !== 200){
-        console.log("ERROR: Server response: " + result.status)
-        console.log(result.statusText);
-      }
-      return;
-    });
-
-    FETCH */
-    
-  }
-
-  // delete a note
-  deleteNote(tag){
-    var notes = {...this.state.notes}
-    notes[tag] = null;
-    delete(notes[tag]);
-    this.setNoteState(notes);
-
-    // update DB
-      /* FETCH
-    fetch("/api?tag=" + tag, {
-        method: "DELETE",
-    }).then((result) => {
-      if(result.status !== 200){
-        console.log("ERROR: Server response: " + result.status)
-        console.log(result.statusText);
-      }
-    });
-    FETCH */
-  }
-
-  updateNote(tag) {
-    var notes = { ...this.state.notes };
-    var note = notes[tag];
-
-    console.log("UPDATING")
-    console.log(this.unsaved)
-
-    // update DB
-      /* FETCH
-    fetch("/api", {
-        method: "PUT",
-        body: JSON.stringify({
-          tag: tag,
-          newcontent: note.content,
-          newx: note.x,
-          newy: note.y,
-          newW: note.width,
-          newH: note.height,
-          newZ: note.zindex
-        })
-    }).then((result) => {
-      if(result.status !== 200){
-        console.log("ERROR: Server response: " + result.status)
-        console.log(result.statusText);
-      }
-      else{
-        note.saved = true;
-      }
-    });
-      FETCH */
-  }
-
-  // Select a note
-  selectNote(tag){
-    // if already selected, done
-    if(this.state.notes[tag].selected){
-      return;
-    }
-
-    // go through each note, deselecting it and moving it back 1
-    // or if it is the note to select, select it and bring it to front
-    var notes = {...this.state.notes};
-    Object.keys(notes).map((k) => {
-      if(k === tag){
-        notes[k].selected = true;
-        notes[k].zindex = 9999;
-      }
-      else{
-        notes[k].selected = false;
-        if(notes[k].zindex > 0){
-          notes[k].zindex--;
-        }
-        
-        }
-      return;
-    })
-    // update state
-    this.setNoteState(notes);
-  }
-
-  // start dragging a note
-  dragStart(tag, x, y){
-    // save the offset from the corner of the note, so when dragging the note will move with the cursor
-    var note = this.state.notes[tag];
-    this.drag = { tag: tag, offsetX: x - note.x, offsetY: y - note.y}
-  }
+import NotePage from './note-page/NotePage';
+import Login from './login/Login';
 
 
-  // Move a note to the cursor when the cursor is moved and a note is being dragged
-  dragDuring(e){
-    // quit now if nothing is being dragged
-    if(!this.drag.tag){
-      return;
-    }
-    // grab the note
-    const notes = {...this.state.notes}
-    var note = notes[this.drag.tag];
+class App extends React.Component{
 
-    // move note to the cursor minue the offset
-    note.x = e.screenX - this.drag.offsetX;
-    note.y = e.screenY - this.drag.offsetY;
-    // update state
-    this.setNoteState(notes);
-  }
+	constructor(){
+		super();
 
-  // stops a dragging note
-  dragEnd(e){
-    if(!this.drag.tag){
-      return;
-    }
+		this.receiveLogin = this.receiveLogin.bind(this);
+		this.logout = this.logout.bind(this);
 
-    this.updateNote(this.drag.tag)
-    this.drag = {};
-  }
+		this.state = {
+			username: '',
+			sessionID: ''
+		}
 
-  resizeStart(tag, x, y) {
-      // save the offset from the corner of the note, so when dragging the note will move with the cursor
-      var note = this.state.notes[tag];
-      this.resize = { tag: tag, startX: x, startY: y }
-  }
+		this.cookies = null;
+	}
 
-  resizeDuring(e) {
-    // quit now if nothing is being dragged
-    if (!this.resize.tag) {
-        return;
-    }
-    // grab the note
-    const notes = { ...this.state.notes }
-    var note = notes[this.resize.tag];
+	componentWillMount(){
+		this.cookies = new Cookie();
+		var sID = this.cookies.get('sessionID');
+		var user = this.cookies.get('username');
+		console.log("SID: " + sID + ', user: ' + user)
+		if(sID && user){
+			this.setState({
+				username: user,
+				sessionID: sID
+			})
+		}
+	}
 
-    // move note to the cursor minue the offset
-    note.width += e.screenX - this.resize.startX;
-    this.resize.startX = e.screenX;
-    note.height += e.screenY - this.resize.startY;
-    this.resize.startY = e.screenY;
-    // update state
-    this.setNoteState(notes);
-  }
+	componentDidMount(){
+		var sID = this.cookies.get('sessionID');
+		var user = this.cookies.get('username');
+		console.log("SID: " + sID + ', user: ' + user)
+	}
 
-  resizeEnd(e) {
-    if (!this.resize.tag) {
-        return;
-    }
+	receiveLogin(username, SID, save){
+		this.setState({
+			username: username,
+			sessionID: SID
+		})
 
-    this.updateNote(this.resize.tag)
-    this.resize = {};
-  }
+		if(save){
+			console.log("LONG SAVE SAVED");
+			var today = new Date();
+			var oneweek = new Date(today.getFullYear(), today.getMonth(), today.getDate()+7)
+			this.cookies.set('username', username, {path: './', expires: oneweek });
+			this.cookies.set('sessionID', SID, { path: './', expires: oneweek });
+			console.log(oneweek)
+		}
+		else{
+			this.cookies.set('username', username, {path: './' });
+			this.cookies.set('sessionID', SID, { path: './' })
+		}
+	}
 
-  markUnsaved(){
-    this.unsaved = true;
-  }
+	logout(){
+		this.setState({
+			username: '',
+			sessionID: ''
+		})
 
-  launchOptions(tag, x, y){
-    var obj = this.state.rightClickMenu;
+		this.cookies.remove('username');
+		this.cookies.remove('password');
+		this.cookies.remove('sessionID');
+	}
 
-    obj.note = tag;
-    obj.display = 'block';
-    obj.x = x;
-    obj.y = y;
+	renderPage(SID){
+		console.log(SID)
+		if(SID){
+			return (<NotePage 
+						sessionID={this.state.sessionID}
+						username={this.state.username}
+						logout={this.logout}
+					/>)
+		}
+		else{
+			return (<Login 
+						receiveLogin={this.receiveLogin}
+					/>)
+		}
+	}
 
-    this.setRightMenuState(obj);
-  }
-
-  // draws the App
-  render() {
-    return (
-      <div className="App" >
-        <h1>Welcome to ENotes!</h1>
-        { Object.keys(this.state.notes).map((key) =>
-          <Note
-            key={key}
-            tag={key}
-            note={this.state.notes[key]}
-            addNote={this.addNote}
-            deleteNote={this.deleteNote}
-            updateNote={this.updateNote}
-            selectNote={this.selectNote}
-            dragStart={this.dragStart}
-            resizeStart={this.resizeStart}
-            markUnsaved={this.markUnsaved}
-
-            launchOptions={this.launchOptions}
-          />  
-        )
-        }
-        <RightClickMenu 
-          obj={this.state.rightClickMenu}
-        />
-      </div>
-    );
-  }
+	render(){
+		return(
+			<div>{this.renderPage(this.state.sessionID)}</div>
+		)
+		
+	}
 }
 
 export default App;
