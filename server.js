@@ -4,7 +4,6 @@ var http = require('http')
 	, qs = require('querystring')
 	, url = require('url')
 	, crypto = require('crypto')
-	, sql = require('sqlite3')
 	, pg = require('pg')
 	, port = process.env.PORT || 8080
 
