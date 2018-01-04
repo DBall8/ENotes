@@ -20,7 +20,6 @@ client.connect().then(() => {
 	const query = client.query('CREATE TABLE users (username VARCHAR(252), hash VARCHAR(252), salt VARCHAR(252), key VARCHAR(252))', (err) => {
 		console.log('error');
 	})
-	query.on('end', () => console.log('end'));
 })
 /*
 query.on('end', () => {
