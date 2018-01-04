@@ -9,7 +9,7 @@ var http = require('http')
 	, port = process.env.PORT || 8080
 
 
-if(fs.existSynch('./secrets.js')){
+if(fs.existsSync('./secrets.js')){
 	var SECRETS = require('./secrets.js')
 	var dbURL = SECRETS.dbURL;
 }
