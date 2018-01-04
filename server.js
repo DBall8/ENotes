@@ -7,7 +7,7 @@ var http = require('http')
 	, sql = require('sqlite3')
 	, pg = require('pg')
 	, port = 8080
-	, dbURL = DATABASE_URL || 'postgres://localhost:8080/'
+	, dbURL = process.env.DATABASE_URL || 'postgres://localhost:8080/'
 
 // open the database
 /*
@@ -580,8 +580,6 @@ function getNotes(uri, res){
 	}
 
 	var key = sessionIDs[input.sessionID].key;
-
-	dbEach('notes', {key: key}, )
 	
 	// collect all notes stored for the user in an array
 	db.each("SELECT * FROM notes WHERE key=(?)", [key], function(error, row){
@@ -678,7 +676,7 @@ function dbUpdate(table, criteriaObj, valsObj) {
     })
 }
 
-function dbEach(table, criteriaObj, function){
+function dbEach(table, criteriaObj, eachFunction){
 	var selectStr = "SELECT * FROM " + table + " WHERE ";
 
 	var criteria = [];
@@ -687,9 +685,9 @@ function dbEach(table, criteriaObj, function){
 		return '' + key + '=(?)'
 	}).join(' AND ');
 
-	var selectStr == criteriaStr;
+	selectStr += criteriaStr;
 
-	db.each(selectStr, criteria, function(err, row))
+	db.each(selectStr, criteria, eachFunction(err, row))
 }
 
 // send a file
