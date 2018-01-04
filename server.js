@@ -5,9 +5,14 @@ var http = require('http')
 	, url = require('url')
 	, crypto = require('crypto')
 	, sql = require('sqlite3')
+	, pg = require('pg')
 	, port = 8080
+	, dbURL = DATABASE_URL || 'postgres://localhost:8080/'
+
+var db = 
 
 // open the database
+/*
 var db = new sql.Database('./data.db', sql.OPEN_READWRITE, function(err){
 	if(err){
 		console.error("Could not open database.");
@@ -17,6 +22,7 @@ var db = new sql.Database('./data.db', sql.OPEN_READWRITE, function(err){
 		console.log("Database opened successfully.");
 	}
 })
+*/
 
 /*
 var options = {
@@ -577,6 +583,8 @@ function getNotes(uri, res){
 
 	var key = sessionIDs[input.sessionID].key;
 
+	dbEach('notes', {key: key}, )
+	
 	// collect all notes stored for the user in an array
 	db.each("SELECT * FROM notes WHERE key=(?)", [key], function(error, row){
 		result.push(row);
@@ -589,6 +597,7 @@ function getNotes(uri, res){
 		}
 		res.end(JSON.stringify(response))
 	})
+	
 }
 
 function dbInsert(table, vals) {
@@ -669,6 +678,20 @@ function dbUpdate(table, criteriaObj, valsObj) {
             }
         })
     })
+}
+
+function dbEach(table, criteriaObj, function){
+	var selectStr = "SELECT * FROM " + table + " WHERE ";
+
+	var criteria = [];
+	var criteriaStr = Objects.keys(criteriaObj).map((key) => {
+		criteria.push(criteriaObj[key]);
+		return '' + key + '=(?)'
+	}).join(' AND ');
+
+	var selectStr == criteriaStr;
+
+	db.each(selectStr, criteria, function(err, row))
 }
 
 // send a file

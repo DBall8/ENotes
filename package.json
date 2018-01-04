@@ -4,6 +4,7 @@
   "private": true,
   "dependencies": {
     "crypto": "^1.0.1",
+    "pg": "^7.4.0",
     "react": "^16.2.0",
     "react-dom": "^16.2.0",
     "react-router": "^4.2.0",
@@ -13,7 +14,7 @@
     "universal-cookie": "^2.1.2"
   },
   "scripts": {
-    "start": "react-scripts start",
+    "start": "node initDB.js&&node server.js",
     "build": "react-scripts build",
     "test": "react-scripts test --env=jsdom",
     "eject": "react-scripts eject"
