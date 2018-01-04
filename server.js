@@ -7,10 +7,16 @@ var http = require('http')
 	, sql = require('sqlite3')
 	, pg = require('pg')
 	, port = process.env.PORT || 8080
-	, SECRETS = require('./secrets.js')
 
 
-var dbURL = process.env.DATABASE_URL || SECRETS.dbURL
+if(fs.existSynch('./secrets.js')){
+	var SECRETS = require('./secrets.js')
+	var dbURL = SECRETS.dbURL;
+}
+else{
+	var dbURL = process.env.DATABASE_URL
+}
+
 // open the database
 var db = new pg.Client(dbURL);
 db.connect().then(() =>{
