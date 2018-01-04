@@ -9,8 +9,6 @@ var http = require('http')
 	, port = 8080
 	, dbURL = DATABASE_URL || 'postgres://localhost:8080/'
 
-var db = 
-
 // open the database
 /*
 var db = new sql.Database('./data.db', sql.OPEN_READWRITE, function(err){
