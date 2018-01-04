@@ -18,10 +18,12 @@ var db = new sql.Database('./data.db', sql.OPEN_READWRITE, function(err){
 	}
 })
 
+/*
 var options = {
 	key: fs.readFileSync('key.pem'),
 	cert: fs.readFileSync('cert.pem')
 };
+*/
 
 // set up the server
 var server = http.createServer(/*options, */function (req, res){
@@ -210,10 +212,6 @@ function logout(req, res){
 			console.log(input.sessionID + " has logged out.")
 			res.writeHead(200);
 		}
-		else{
-			// sessionID wasnt found
-			res.writeHead(400)
-		}
 		// send response
 		res.end();
 	})
@@ -269,7 +267,33 @@ function newUser(username, password, res){
 	// add a row to the users db table with the username, the hashed value, the salt used, and a unique key generated for this user
 	var hashVal = hash.digest('hex');
 	// gerenate a unique key and then insert the row 
-	generateKey().then((key) =>{
+    generateKey().then((key) => {
+        dbInsert('users', [username, hashVal, salt, key]).then((success) => {
+            if (success) {
+                // it worked so send a good response
+                res.writeHead(200);
+                var sID = username + '-' + Date.now();
+                sessionIDs[sID] = {
+                    key: key,
+                    timer: setTimeout(function () {
+                        if (sessionIDs[sID]) {
+                            delete (sessionIDs[sID]);
+                        }
+                    }, 1000 * 60 * 60 * 3) // sessionID expires in 3 hours
+                };
+                // send repsonse indicating that the user did not already exist so it was successful
+                res.end(JSON.stringify({
+                    userAlreadyExists: false,
+                    sessionID: sID,
+                }));
+                console.log("User: " + username + " successfully added.")
+            }
+            else {
+                res.writeHead(500);
+                res.end();
+            }
+        })
+        /*
 		db.run("INSERT INTO users VALUES((?), (?), (?), (?))", [username, hashVal, salt, key], function(err){
 			if(err){
 				// send an error response
@@ -296,6 +320,7 @@ function newUser(username, password, res){
 				console.log("User: " + username + " successfully added.")
 			}
 		});
+        */
 	});
 }
 
@@ -356,6 +381,20 @@ function addNote(req, res) {
 
 		// add the note to the database
         var values = [key, input.tag, input.content, input.x, input.y, input.width, input.height, input.zindex]
+        dbInsert('notes', values).then((success) => {
+            if (success) {
+                res.writeHead(200);
+                var response = {
+                    sessionExpired: false
+                }
+                res.end(JSON.stringify(response));
+            }
+            else {
+                res.writeHead(500);
+                res.end();
+            }
+        })
+        /*
 		db.serialize(function(){
             db.run('INSERT INTO notes VALUES ((?), (?), (?), (?), (?), (?), (?), (?))', values, function (err) {
                 if (err) {
@@ -375,6 +414,7 @@ function addNote(req, res) {
             	}
             });
 		})
+        */
 	})
 }
 
@@ -400,6 +440,26 @@ function deleteNote(req, res){
 		// get key stored with sessionID
 		var key = sessionIDs[input.sessionID].key;
 
+        dbDelete('notes', {
+            key: key,
+            tag: input.tag
+        }).then((success) => {
+            if (success) {
+                
+                res.writeHead(200)
+                var response = {
+                    sessionExpired: false
+                }
+                res.end(JSON.stringify(response));
+
+                console.log(input.tag + " successfully deleted")
+            }
+            else {
+                res.writeHead(500)
+                res.end();
+            }
+        })
+        /*
 		// delete note from database
 		db.run("DELETE FROM notes WHERE key=(?) AND tag=(?)", [key, input.tag], function(err){
 			if(err){
@@ -416,6 +476,7 @@ function deleteNote(req, res){
 				res.end(JSON.stringify(response));
 			}
 		})
+        */
 	})
 	
 }
@@ -444,7 +505,39 @@ function updateNote(req, res){
 		var key = sessionIDs[input.sessionID].key;
 
 		// update contents of the note
-		var arr = [input.newcontent, input.newx, input.newy, input.newW, input.newH, input.newZ, key, input.tag]
+        
+        dbUpdate('notes',
+            // criteria
+            {
+                key: key,
+                tag: input.tag
+            },
+            // new values
+            {
+                content: input.newcontent,
+                x: input.newx,
+                y: input.newy,
+                width: input.newW,
+                height: input.newH,
+                zindex: input.newZ
+            }
+        ).then((success) => {
+            if (success) {
+                res.writeHead(200)
+                var response = {
+                    sessionExpired: false
+                }
+                res.end(JSON.stringify(response));
+                    
+            }
+            else {
+                console.error("ERROR could not update note" + input.tag + ":\n" + err);
+                res.writeHead(500)
+                res.end()
+            }
+        })
+        /*
+        var arr = [input.newcontent, input.newx, input.newy, input.newW, input.newH, input.newZ, key, input.tag]
 		db.serialize(() =>{
 			db.run("UPDATE notes SET content=(?), x=(?), y=(?), width=(?), height=(?), zindex=(?) WHERE key=(?) AND tag=(?)", arr, function(err){
 				if(err){
@@ -461,6 +554,7 @@ function updateNote(req, res){
 				}
 			})
 		})
+        */
 	})
 }
 
@@ -495,6 +589,86 @@ function getNotes(uri, res){
 		}
 		res.end(JSON.stringify(response))
 	})
+}
+
+function dbInsert(table, vals) {
+    return new Promise((resolve, reject) => {
+        var numVals = vals.length;
+        var insertStr = "INSERT INTO " + table + " VALUES (";
+        var valStr = vals.map((item) => {
+            return '(?)'
+        }).join(', ');
+
+        insertStr += valStr + ')';
+
+        db.run(insertStr, vals, function (err) {
+            if (err) {
+                console.error("Could not insert into " + table)
+                console.error(err)
+                resolve(false);
+            }
+            else {
+                resolve(true);
+            }
+        })
+    })
+}
+
+function dbDelete(table, valsObj) {
+    return new Promise((resolve, reject) => {
+        var deleteStr = "DELETE FROM " + table + " WHERE ";
+        var vals = [];
+        var criteria = Object.keys(valsObj).map((key) => {
+            vals.push(valsObj[key]);
+            return '' + key + '=(?)';
+        }).join(' AND ');
+
+        deleteStr += criteria;
+        console.log(deleteStr);
+
+        db.run(deleteStr, vals, function (err) {
+            if (err) {
+                console.error("Could not delete from " + table)
+                console.error(err)
+                resolve(false)
+            }
+            else {
+                resolve(true);
+            }
+        })
+    })
+}
+
+function dbUpdate(table, criteriaObj, valsObj) {
+    return new Promise((resolve, reject) => {
+        var insertStr = "UPDATE " + table + " SET ";
+
+        var vals = [];
+        var valStr = Object.keys(valsObj).map((key) => {
+            vals.push(valsObj[key]);
+            return '' + key + '=(?)';
+        }).join(', ');
+
+        var criteria = [];
+        var criteriaStr = Object.keys(criteriaObj).map((key) => {
+            criteria.push(criteriaObj[key]);
+            return '' + key + '=(?)';
+        }).join(' AND ');
+
+        var insertStr = insertStr + valStr + ' WHERE ' + criteriaStr;
+        var arr = [...vals, ...criteria]
+
+        db.run(insertStr, arr, function (err) {
+            if (err) {
+                console.error("Could not update " + table)
+                console.error(err)
+                resolve(false)
+            }
+            else {
+                resolve(true);
+            }
+        })
+    })
 }
 
 // send a file

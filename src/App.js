@@ -67,7 +67,6 @@ class App extends React.Component{
 		})
 
 		this.cookies.remove('username');
-		this.cookies.remove('password');
 		this.cookies.remove('sessionID');
 	}
 
