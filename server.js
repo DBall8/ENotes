@@ -8,14 +8,14 @@ var http = require('http')
 	, pg = require('pg')
 	, port = process.env.PORT || 8080
 
-
+/*
 if(fs.existsSync('./secrets.js')){
 	var SECRETS = require('./secrets.js')
 	var dbURL = SECRETS.dbURL;
 }
-else{
+else{*/
 	var dbURL = process.env.DATABASE_URL
-}
+//}
 
 // open the database
 var db = new pg.Client(dbURL);
