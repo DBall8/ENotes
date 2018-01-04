@@ -10,7 +10,7 @@ var http = require('http')
 	, dbURL = process.env.DATABASE_URL || 'postgres://localhost:8080/'
 
 // open the database
-/*
+
 var pgClient = new pg.Client(dbURL);
 pgClient.connect().then(() =>{
 	pgClient.query('CREATE TABLE IF NOT EXISTS users (username VARCHAR(252), hash VARCHAR(252), salt VARCHAR(252), key VARCHAR(252))');
@@ -18,7 +18,7 @@ pgClient.connect().then(() =>{
 	console.log("Database successfully opened");
 })
 
-*/
+
 var db = new sql.Database('./data.db', sql.OPEN_READWRITE, function(err){
 	if(err){
 		console.error("Could not open database.");
