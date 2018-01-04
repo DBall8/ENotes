@@ -7,18 +7,22 @@ var http = require('http')
 	, sql = require('sqlite3')
 	, pg = require('pg')
 	, port = process.env.PORT || 8080
-	, dbURL = process.env.DATABASE_URL || 'postgres://localhost:8080/'
+	, SECRETS = require('./secrets.js')
 
+
+var dbURL = process.env.DATABASE_URL || SECRETS.dbURL
 // open the database
-
-var pgClient = new pg.Client(dbURL);
-pgClient.connect().then(() =>{
-	pgClient.query('CREATE TABLE IF NOT EXISTS users (username VARCHAR(252), hash VARCHAR(252), salt VARCHAR(252), key VARCHAR(252))');
-	pgClient.query('CREATE TABLE IF NOT EXISTS notes (key VARCHAR(252), tag VARCHAR(252), content VARCHAR(4096), x INTEGER, y INTEGER, width INTEGER, height INTEGER, zindex INTEGER)')
-	console.log("Database successfully opened");
+var db = new pg.Client(dbURL);
+db.connect().then(() =>{
+	db.query('CREATE TABLE IF NOT EXISTS users (username VARCHAR(252), hash VARCHAR(252), salt VARCHAR(252), key VARCHAR(252))');
+	db.query('CREATE TABLE IF NOT EXISTS notes (key VARCHAR(252), tag VARCHAR(252), content VARCHAR(4096), x INTEGER, y INTEGER, width INTEGER, height INTEGER, zindex INTEGER)')
+	console.log("Successfully connected to database.");
+}, (err) =>{
+	console.error("Failed to connect to database.")
+	console.error(err)
 })
 
-
+/*
 var db = new sql.Database('./data.db', sql.OPEN_READWRITE, function(err){
 	if(err){
 		console.error("Could not open database.");
@@ -27,7 +31,7 @@ var db = new sql.Database('./data.db', sql.OPEN_READWRITE, function(err){
 	else{
 		console.log("Database opened successfully.");
 	}
-})
+})*/
 
 
 /*
@@ -127,70 +131,73 @@ function attemptLogin(input, res){
 	var key = ''; // replace with a key if a username and password match a saved user 
 
 	// (should only be called once)
-	db.each("SELECT * FROM users WHERE username=(?)", [input.username], function(err, row){
+	db.query("SELECT * FROM users WHERE username=$1", [input.username], function(err, resp){
 		if(err){
 			console.error("ERROR: could not access usernames\n" + err);
 		}
 		else{
-			// hash the password with the same salt and see if it matches the hash saved for that username
-			var hash = crypto.createHmac('sha512', row.salt);
-			hash.update(input.password);
-			var hashVal = hash.digest('hex');
-			if(hashVal === row.hash){
-				console.log("LOGIN ACCEPTED: " + row.username)
-				key = row.key // save this key
-			}
-			else{
-				console.log("LOGIN FAILED: " + row.username)
-			}
-		}
-	}, function(){ // after searching the database ...
-		var response = {}
-		// if a login was accepted then a key other than '' will have been stored
-		if(key){
 
-			// set a timeout timer for the session
-			var time;
-			if(input.stayLoggedIn){
-				time = 1000 * 60 * 60 * 24 * 7; // ~1 week in milliseconds
-			}
-			else{
-				time = 1000 * 60 * 60 * 3; // 3 hours
-			}
+			resp.rows.map((row) => {
+				// hash the password with the same salt and see if it matches the hash saved for that username
+				var hash = crypto.createHmac('sha512', row.salt);
+				hash.update(input.password);
+				var hashVal = hash.digest('hex');
+				if(hashVal === row.hash){
+					console.log("LOGIN ACCEPTED: " + row.username)
+					key = row.key // save this key
+				}
+				else{
+					console.log("LOGIN FAILED: " + row.username)
+				}
+			})
+			
+			var response = {}
+			// if a login was accepted then a key other than '' will have been stored
+			if(key){
 
-			// check if a session ID for this username has already been saved
-			var sID = checkIfSessionOpen(input.username);
-			// if no, generate a new one from the username and current time
-			if(!sID){
-				sID = input.username + '-' + Date.now();
-				sessionIDs[sID] = {
-					key: key,
-					timer: setTimeout(function(){ 
+				// set a timeout timer for the session
+				var time;
+				if(input.stayLoggedIn){
+					time = 1000 * 60 * 60 * 24 * 7; // ~1 week in milliseconds
+				}
+				else{
+					time = 1000 * 60 * 60 * 3; // 3 hours
+				}
+
+				// check if a session ID for this username has already been saved
+				var sID = checkIfSessionOpen(input.username);
+				// if no, generate a new one from the username and current time
+				if(!sID){
+					sID = input.username + '-' + Date.now();
+					sessionIDs[sID] = {
+						key: key,
+						timer: setTimeout(function(){ 
+							if(sessionIDs[sID]){
+								delete(sessionIDs[sID]);
+							}
+						}, time) // sessionID expires in 3 hours or 1 week depeneding if the user checked "stay logged in"
+					};
+				}
+				else{
+					var oldTimer = sessionIDs[sID].timer;
+					clearTimeout(oldTimer);
+					sessionIDs[sID].timer = setTimeout(function(){ 
 						if(sessionIDs[sID]){
 							delete(sessionIDs[sID]);
 						}
-					}, time) // sessionID expires in 3 hours or 1 week depeneding if the user checked "stay logged in"
-				};
+					}, time)
+				}
+				// build a response object stating that the login was successful and send the generated sessionID
+				response = {successful: true, sessionID: sID};		
 			}
 			else{
-				var oldTimer = sessionIDs[sID].timer;
-				clearTimeout(oldTimer);
-				sessionIDs[sID].timer = setTimeout(function(){ 
-					if(sessionIDs[sID]){
-						delete(sessionIDs[sID]);
-					}
-				}, time)
+				// if no key stored, all logins failed, so send a response stating it was unsuccessful
+				response = {successful: false};
 			}
-			// build a response object stating that the login was successful and send the generated sessionID
-			response = {successful: true, sessionID: sID};		
+			// send response
+			res.writeHead(200);
+			res.end(JSON.stringify(response));
 		}
-		else{
-			// if no key stored, all logins failed, so send a response stating it was unsuccessful
-			response = {successful: false};
-		}
-		// send response
-		res.writeHead(200);
-		res.end(JSON.stringify(response));
 	})
 }
 
@@ -240,28 +247,25 @@ function createNewUser(req, res){
 
 		// search db to see if username already exists
 		var userExists = false;
-		db.each("SELECT * FROM users WHERE username=(?)", [input.username], function(err, row){
+		db.query("SELECT * FROM users WHERE username=$1", [input.username], function(err, resp){
 			if(err){
 				console.log(err);
 			}
 			else{
-				// the username was found in the db
-				userExists = true;
+				// if the username already exists, say so in the response message
+				if(resp.rows.length > 0){
+					res.writeHead(200);
+					res.end(JSON.stringify({
+						userAlreadyExists: true
+					}))
+					console.log("USER '" + input.username + "' ALREADY EXISTS")
+				}
+				else{
+					// if username not found, create a new user
+					newUser(input.username, input.password, res);
+				}
 			}
-		}, function(){
-			// if the username already exists, say so in the response message
-			if(userExists){
-				res.writeHead(200);
-				res.end(JSON.stringify({
-					userAlreadyExists: true
-				}))
-				console.log("USER '" + input.username + "' ALREADY EXISTS")
-			}
-			else{
-				// if username not found, create a new user
-				newUser(input.username, input.password, res);
-			}
-		})
+		});
 		
 	})
 }
@@ -280,59 +284,29 @@ function newUser(username, password, res){
 	var hashVal = hash.digest('hex');
 	// gerenate a unique key and then insert the row 
     generateKey().then((key) => {
-        dbInsert('users', [username, hashVal, salt, key]).then((success) => {
-            if (success) {
-                // it worked so send a good response
-                res.writeHead(200);
-                var sID = username + '-' + Date.now();
-                sessionIDs[sID] = {
-                    key: key,
-                    timer: setTimeout(function () {
-                        if (sessionIDs[sID]) {
-                            delete (sessionIDs[sID]);
-                        }
-                    }, 1000 * 60 * 60 * 3) // sessionID expires in 3 hours
-                };
-                // send repsonse indicating that the user did not already exist so it was successful
-                res.end(JSON.stringify({
-                    userAlreadyExists: false,
-                    sessionID: sID,
-                }));
-                console.log("User: " + username + " successfully added.")
-            }
-            else {
-                res.writeHead(500);
-                res.end();
-            }
-        })
-        /*
-		db.run("INSERT INTO users VALUES((?), (?), (?), (?))", [username, hashVal, salt, key], function(err){
-			if(err){
-				// send an error response
-				console.error("ERROR could not insert new user:\n" + err);
-				res.writeHead(500);
-			}
-			else{
-				// it worked so send a good response
-				res.writeHead(200);
-				var sID = username + '-' + Date.now();
-				sessionIDs[sID] = {
-					key: key,
-					timer: setTimeout(function(){ 
-						if(sessionIDs[sID]){
-							delete(sessionIDs[sID]);
-						}
-					}, 1000 * 60 * 60 * 3) // sessionID expires in 3 hours
-				};
-				// send repsonse indicating that the user did not already exist so it was successful
-				res.end(JSON.stringify({
-					userAlreadyExists: false,
-					sessionID: sID,
-				}));
-				console.log("User: " + username + " successfully added.")
-			}
+		db.query("INSERT INTO users VALUES($1, $2, $3, $4)", [username, hashVal, salt, key]).then(() => {
+			// it worked so send a good response
+			res.writeHead(200);
+			var sID = username + '-' + Date.now();
+			sessionIDs[sID] = {
+				key: key,
+				timer: setTimeout(function(){ 
+					if(sessionIDs[sID]){
+						delete(sessionIDs[sID]);
+					}
+				}, 1000 * 60 * 60 * 3) // sessionID expires in 3 hours
+			};
+			// send repsonse indicating that the user did not already exist so it was successful
+			res.end(JSON.stringify({
+				userAlreadyExists: false,
+				sessionID: sID,
+			}));
+			console.log("User: " + username + " successfully added.")
+		}, (err) => { // on rejection
+			// send an error response
+			console.error("ERROR could not insert new user:\n" + err);
+			res.writeHead(500);
 		});
-        */
 	});
 }
 
@@ -340,7 +314,7 @@ function newUser(username, password, res){
 // generates a unique key for each user for using to access that user's database
 // A different database might be good to make this more efficient
 function generateKey(){
-	return new Promise((res, rej) => getNewKey(res, rej));
+	return new Promise((res, rej) => {getNewKey(res, rej)});
 }
 
 // generates a random number and sees if its already used, and repeats until a new one is found
@@ -349,22 +323,19 @@ function getNewKey(res, rej){
 	var key = crypto.randomBytes(128).toString('base64');
 	// search database to see if the key is already in use
 	var alreadyExists = false;
-	db.each("SELECT * FROM users WHERE key=(?)", [key], function(error, result){
+	db.query("SELECT * FROM users WHERE key=$1", [key], function(error, resp){
 		if(error){
 			rej(error)
 		}
 		else{
-			// key is already in use
-			alreadyExists = true;
-		}
-	}, function(){
-		// if key in use, loop again recursively
-		if(alreadyExists){
-			getNewKey(res, rej);
-		}
-		// if key wasnt in use, resolve with the key
-		else{
-			res(key);
+			// if key in use, loop again recursively
+			if(resp.rows.length > 0){
+				getNewKey(res, rej);
+			}
+			// if key wasnt in use, resolve with the key
+			else{
+				res(key);
+			}
 		}
 	})
 }
@@ -393,40 +364,22 @@ function addNote(req, res) {
 
 		// add the note to the database
         var values = [key, input.tag, input.content, input.x, input.y, input.width, input.height, input.zindex]
-        dbInsert('notes', values).then((success) => {
-            if (success) {
-                res.writeHead(200);
-                var response = {
-                    sessionExpired: false
-                }
-                res.end(JSON.stringify(response));
-            }
-            else {
-                res.writeHead(500);
-                res.end();
-            }
-        })
-        /*
-		db.serialize(function(){
-            db.run('INSERT INTO notes VALUES ((?), (?), (?), (?), (?), (?), (?), (?))', values, function (err) {
-                if (err) {
-                    console.error("Could not insert new note:")
-                    console.error(err)
-                    res.writeHead(500);
-                  	res.end();
-                } 
-                else{
-                	// successful
-                	console.log(input.tag + " successfully added")
-                	res.writeHead(200);
-                	var response = {
-						sessionExpired: false
-					}
-					res.end(JSON.stringify(response));
-            	}
-            });
-		})
-        */
+        
+        db.query('INSERT INTO notes VALUES ($1, $2, $3, $4, $5, $6, $7, $8)', values).then(() =>{
+        	// successful
+        	console.log(input.tag + " successfully added")
+        	res.writeHead(200);
+        	var response = {
+				sessionExpired: false
+			}
+			res.end(JSON.stringify(response));
+        }, (err) =>{
+        	// rejected
+        	console.error("Could not insert new note:")
+            console.error(err)
+            res.writeHead(500);
+          	res.end();
+      	});	
 	})
 }
 
@@ -451,44 +404,21 @@ function deleteNote(req, res){
 
 		// get key stored with sessionID
 		var key = sessionIDs[input.sessionID].key;
-
-        dbDelete('notes', {
-            key: key,
-            tag: input.tag
-        }).then((success) => {
-            if (success) {
-                
-                res.writeHead(200)
-                var response = {
-                    sessionExpired: false
-                }
-                res.end(JSON.stringify(response));
-
-                console.log(input.tag + " successfully deleted")
-            }
-            else {
-                res.writeHead(500)
-                res.end();
-            }
-        })
-        /*
+        
 		// delete note from database
-		db.run("DELETE FROM notes WHERE key=(?) AND tag=(?)", [key, input.tag], function(err){
-			if(err){
-				console.error("ERROR Could not delete note:\n" + err);
-				res.writeHead(500)
-				res.end();
+		db.query("DELETE FROM notes WHERE key=$1 AND tag=$2", [key, input.tag]).then(() => {
+			console.log(input.tag + " successfully deleted")
+			res.writeHead(200)
+			var response = {
+				sessionExpired: false
 			}
-			else{
-				console.log(input.tag + " successfully deleted")
-				res.writeHead(200)
-				var response = {
-					sessionExpired: false
-				}
-				res.end(JSON.stringify(response));
-			}
+			res.end(JSON.stringify(response));
+		}, (err) =>{
+			console.error("ERROR Could not delete note:\n" + err);
+			res.writeHead(500)
+			res.end();
 		})
-        */
+        
 	})
 	
 }
@@ -517,56 +447,18 @@ function updateNote(req, res){
 		var key = sessionIDs[input.sessionID].key;
 
 		// update contents of the note
-        
-        dbUpdate('notes',
-            // criteria
-            {
-                key: key,
-                tag: input.tag
-            },
-            // new values
-            {
-                content: input.newcontent,
-                x: input.newx,
-                y: input.newy,
-                width: input.newW,
-                height: input.newH,
-                zindex: input.newZ
-            }
-        ).then((success) => {
-            if (success) {
-                res.writeHead(200)
-                var response = {
-                    sessionExpired: false
-                }
-                res.end(JSON.stringify(response));
-                    
-            }
-            else {
-                console.error("ERROR could not update note" + input.tag + ":\n" + err);
-                res.writeHead(500)
-                res.end()
-            }
-        })
-        /*
         var arr = [input.newcontent, input.newx, input.newy, input.newW, input.newH, input.newZ, key, input.tag]
-		db.serialize(() =>{
-			db.run("UPDATE notes SET content=(?), x=(?), y=(?), width=(?), height=(?), zindex=(?) WHERE key=(?) AND tag=(?)", arr, function(err){
-				if(err){
-					console.error("ERROR could not update note" + input.tag + ":\n" + err);
-					res.writeHead(500)
-					res.end()
-				}
-				else{
-					res.writeHead(200)
-					var response = {
-						sessionExpired: false
-					}
-					res.end(JSON.stringify(response));
-				}
-			})
-		})
-        */
+		db.query("UPDATE notes SET content=$1, x=$2, y=$3, width=$4, height=$5, zindex=$6 WHERE key=$7 AND tag=$8", arr).then(() =>{
+			res.writeHead(200)
+			var response = {
+				sessionExpired: false
+			}
+			res.end(JSON.stringify(response));
+		}, (err) => {
+			console.error("ERROR could not update note" + input.tag + ":\n" + err);
+			res.writeHead(500)
+			res.end()
+		});
 	})
 }
 
@@ -590,13 +482,11 @@ function getNotes(uri, res){
 	var key = sessionIDs[input.sessionID].key;
 	
 	// collect all notes stored for the user in an array
-	db.each("SELECT * FROM notes WHERE key=(?)", [key], function(error, row){
-		result.push(row);
-	}, function(){
+	db.query("SELECT * FROM notes WHERE key=$1", [key], function(error, resp){
 		// send the array
 		res.writeHead(200, {'Content-type': 'application/json'});
 		var response = {
-			notes: result,
+			notes: resp.rows,
 			sessionExpired: false
 		}
 		res.end(JSON.stringify(response))
@@ -604,99 +494,6 @@ function getNotes(uri, res){
 	
 }
 
-function dbInsert(table, vals) {
-    return new Promise((resolve, reject) => {
-        var numVals = vals.length;
-        var insertStr = "INSERT INTO " + table + " VALUES (";
-        var valStr = vals.map((item) => {
-            return '(?)'
-        }).join(', ');
-
-        insertStr += valStr + ')';
-
-        db.run(insertStr, vals, function (err) {
-            if (err) {
-                console.error("Could not insert into " + table)
-                console.error(err)
-                resolve(false);
-            }
-            else {
-                resolve(true);
-            }
-        })
-    })
-}
-
-function dbDelete(table, valsObj) {
-    return new Promise((resolve, reject) => {
-        var deleteStr = "DELETE FROM " + table + " WHERE ";
-        var vals = [];
-        var criteria = Object.keys(valsObj).map((key) => {
-            vals.push(valsObj[key]);
-            return '' + key + '=(?)';
-        }).join(' AND ');
-
-        deleteStr += criteria;
-        console.log(deleteStr);
-
-        db.run(deleteStr, vals, function (err) {
-            if (err) {
-                console.error("Could not delete from " + table)
-                console.error(err)
-                resolve(false)
-            }
-            else {
-                resolve(true);
-            }
-        })
-    })
-}
-
-function dbUpdate(table, criteriaObj, valsObj) {
-    return new Promise((resolve, reject) => {
-        var insertStr = "UPDATE " + table + " SET ";
-
-        var vals = [];
-        var valStr = Object.keys(valsObj).map((key) => {
-            vals.push(valsObj[key]);
-            return '' + key + '=(?)';
-        }).join(', ');
-
-        var criteria = [];
-        var criteriaStr = Object.keys(criteriaObj).map((key) => {
-            criteria.push(criteriaObj[key]);
-            return '' + key + '=(?)';
-        }).join(' AND ');
-
-        var insertStr = insertStr + valStr + ' WHERE ' + criteriaStr;
-        var arr = [...vals, ...criteria]
-
-        db.run(insertStr, arr, function (err) {
-            if (err) {
-                console.error("Could not update " + table)
-                console.error(err)
-                resolve(false)
-            }
-            else {
-                resolve(true);
-            }
-        })
-    })
-}
-
-function dbEach(table, criteriaObj, eachFunction){
-	var selectStr = "SELECT * FROM " + table + " WHERE ";
-
-	var criteria = [];
-	var criteriaStr = Objects.keys(criteriaObj).map((key) => {
-		criteria.push(criteriaObj[key]);
-		return '' + key + '=(?)'
-	}).join(' AND ');
-
-	selectStr += criteriaStr;
-
-	db.each(selectStr, criteria, eachFunction(err, row))
-}
 
 // send a file
 function sendFile(res, filename, type){

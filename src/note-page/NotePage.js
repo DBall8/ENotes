@@ -419,8 +419,9 @@ class NotePage extends React.Component {
   render() {
     return (
       <div className="App" >
-        <h1 className="title">Welcome {this.props.username}!</h1>
+        <h1 className="title">Welcome {this.props.username}!
         <button className="logoutButton" onClick={(e) => this.logout()}>Logout</button>
+        </h1>
         { Object.keys(this.state.notes).map((key) =>
           <Note
             key={key}

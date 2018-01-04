@@ -165,7 +165,10 @@ class Login extends React.Component{
 		this.setState((prevstate) => {
 			return {
 				signingUp: signUp,
-				loginError: prevstate.loginError
+				loginError: {
+					visible: false,
+					text: ""
+				}
 			}
 		})
 	}
