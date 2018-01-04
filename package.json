@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
+    "node": "6.11.3",
     "crypto": "^1.0.1",
     "pg": "^7.4.0",
     "react": "^16.2.0",
