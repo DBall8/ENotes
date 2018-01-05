@@ -399,6 +399,7 @@ class NotePage extends React.Component {
   }
 
   logout(){
+
     fetch("/logout", {
         method: "POST",
         body: JSON.stringify({
@@ -409,10 +410,8 @@ class NotePage extends React.Component {
         console.log("ERROR: Server response: " + result.status)
         console.log(result.statusText);
       }
-      else{
-        this.props.logout();
-      }
     });
+    this.props.logout();
   }
 
   // draws the App
