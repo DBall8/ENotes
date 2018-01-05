@@ -1,6 +1,8 @@
 import React from 'react';
 
 import resizeIm from '../resources/resize.png'
+import plusIm from '../resources/plus.png'
+import delIm from '../resources/x.png'
 import './note.css';
 
 class Note extends React.Component{
@@ -68,8 +70,8 @@ class Note extends React.Component{
 				<div className={"noteHead " + (this.props.note.selected? 'orange': 'yellow')} 
 					onMouseDown={(e) => this.dragStart(e)} 
 				>
-					<button className="newButton" onClick={(e) => this.addNote(e)}>+</button>
-					<button className="deleteButton" onClick={(e) => this.deleteNote(e)}>x</button>
+                    <input type="image" src={plusIm} className={"newButton button"} onClick={(e) => this.addNote(e)} />
+                    <input type="image" src={delIm} className={"deleteButton button"} onClick={(e) => this.deleteNote(e)} />
 				</div>
 				<div className="noteBody" style={{height: this.props.note.height - 40}}>
                     <textarea className="noteContent" 

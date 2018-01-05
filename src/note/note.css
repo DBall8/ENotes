@@ -46,18 +46,29 @@
 }
 
 .newButton {
+    background: #ffe062;
+    image-rendering: crisp-edges;
+    image-resolution: from-image;
     float: left;
-    width: 24px;
-    height: 24px;
+    width: 25px;
+    height: 25px;
     margin: 5px;
 }
 
+
 .deleteButton {
+    background: #ffe062;
+    image-rendering: crisp-edges;
+    image-resolution: from-image;
     float: right;
-    width: 24px;
-    height: 24px;
+    width: 25px;
+    height: 25px;
     margin: 5px;
 }
+    .button:hover{
+        -webkit-filter: brightness(70%);
+    }
+
 
 input, textarea {
     box-sizing: border-box;

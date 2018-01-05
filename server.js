@@ -7,14 +7,13 @@ var http = require('http')
 	, pg = require('pg')
 	, port = process.env.PORT || 8080
 
-/*
-if(fs.existsSync('./secrets.js')){
-	var SECRETS = require('./secrets.js')
-	var dbURL = SECRETS.dbURL;
+
+if (process.env.DATABASE_URL){
+	var dbURL = process.env.DATABASE_URL;
 }
-else{*/
-	var dbURL = process.env.DATABASE_URL
-//}
+else {
+    var dbURL = require('./secrets.js').dbURL
+}
 
 // open the database
 var db = new pg.Client(dbURL);
@@ -26,18 +25,6 @@ db.connect().then(() =>{
 	console.error("Failed to connect to database.")
 	console.error(err)
 })
-
-/*
-var db = new sql.Database('./data.db', sql.OPEN_READWRITE, function(err){
-	if(err){
-		console.error("Could not open database.");
-		console.error(err);
-	}
-	else{
-		console.log("Database opened successfully.");
-	}
-})*/
-
 
 /*
 var options = {
