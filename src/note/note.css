@@ -46,7 +46,7 @@
 }
 
 .newButton {
-    background: #ffe062;
+    background-color: inherit;
     image-rendering: crisp-edges;
     image-resolution: from-image;
     float: left;
@@ -57,7 +57,7 @@
 
 
 .deleteButton {
-    background: #ffe062;
+    background-color: inherit;
     image-rendering: crisp-edges;
     image-resolution: from-image;
     float: right;
