@@ -39,8 +39,6 @@ class Login extends React.Component{
 			return;
 		}
 		else{
-			console.log("User: " + usernameAttempt);
-			console.log("Password: " + passwordAttempt)
 
 			fetch('/login', {
 				method: 'POST',
@@ -55,7 +53,7 @@ class Login extends React.Component{
 					return res.json();
 				}
 				else{
-					console.log("Could not connect to server.\n" + res.statusText);
+					console.error("Could not connect to server.\n" + res.statusText);
 					var loginError = {
 						visible: true,
 						text: "Could not connect to server.\n" + res.statusText
@@ -65,11 +63,9 @@ class Login extends React.Component{
 				}
 			}).then((result) => {
 				if(result.successful){
-					console.log("SUCCESS, sessionID = " + result.sessionID);
 					this.props.receiveLogin(usernameAttempt, result.sessionID, this.checkbox.checked);
 				}
 				else{
-					console.log("LOGIN FAILED");
 					var loginError = {
 						visible: true,
 						text: "Incorrect username or password"
@@ -110,11 +106,7 @@ class Login extends React.Component{
 			return;
 		}
 		else{
-			console.log("User: " + usernameAttempt);
-			console.log("Password: " + passwordAttempt)
-
 			if(passwordAttempt != confirmPass){
-				console.log("Passwords do not match");
 				var loginError = {
 					visible: true,
 					text: "Passwords do not match."
@@ -135,7 +127,7 @@ class Login extends React.Component{
 					return res.json();
 				}
 				else{
-					console.log("Could not connect to server.\n" + res.statusText);
+					console.error("Could not connect to server.\n" + res.statusText);
 					var loginError = {
 						visible: true,
 						text: "Could not connect to server.\n" + res.statusText
@@ -145,7 +137,6 @@ class Login extends React.Component{
 				}
 			}).then((result) => {
 				if(result.userAlreadyExists){
-					console.log("USERNAME TAKEN");
 					var loginError = {
 						visible: true,
 						text: "Username already taken."
@@ -154,7 +145,6 @@ class Login extends React.Component{
 				}
 				else{
 					this.props.receiveLogin(usernameAttempt, result.sessionID, false);
-					console.log("USER ADDED")
 				}
 			})
 		}

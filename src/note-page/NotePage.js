@@ -59,7 +59,6 @@ class NotePage extends React.Component {
 
       window.addEventListener('mousedown', (event) => {
         if(this.state.rightClickMenu.note){
-            console.log("HI")
             var obj = {
               note: '',
               display: 'none',
@@ -112,7 +111,7 @@ class NotePage extends React.Component {
     fetch("/api?sessionID=" + this.props.sessionID)
     .then((res) => {
         if(res.status !== 200){
-          console.log(res.statusText);
+          console.error(res.statusText);
         }
         else{ return res.json()}
       }) // turn result to json (??)
@@ -196,8 +195,8 @@ class NotePage extends React.Component {
         })
     }).then((result) => {
       if(result.status !== 200){
-        console.log("ERROR: Server response: " + result.status)
-        console.log(result.statusText);
+        console.error("ERROR: Server response: " + result.status)
+        console.error(result.statusText);
       }
       else{
         return result.json();
@@ -231,8 +230,8 @@ class NotePage extends React.Component {
         })
     }).then((result) => {
       if(result.status !== 200){
-        console.log("ERROR: Server response: " + result.status)
-        console.log(result.statusText);
+        console.error("ERROR: Server response: " + result.status)
+        console.error(result.statusText);
       }
       else{
         return result.json()
@@ -250,9 +249,6 @@ class NotePage extends React.Component {
     var notes = { ...this.state.notes };
     var note = notes[tag];
 
-    console.log("UPDATING")
-    console.log(this.unsaved)
-
     // update DB
       //* FETCH
     fetch("/api", {
@@ -269,8 +265,8 @@ class NotePage extends React.Component {
         })
     }).then((result) => {
       if(result.status !== 200){
-        console.log("ERROR: Server response: " + result.status)
-        console.log(result.statusText);
+        console.error("ERROR: Server response: " + result.status)
+        console.error(result.statusText);
       }
       else{
         return result.json();
@@ -407,8 +403,8 @@ class NotePage extends React.Component {
         })
     }).then((result) => {
       if(result.status !== 200){
-        console.log("ERROR: Server response: " + result.status)
-        console.log(result.statusText);
+        console.error("ERROR: Server response: " + result.status)
+        console.error(result.statusText);
       }
     });
     this.props.logout();

@@ -25,7 +25,7 @@ class App extends React.Component{
 		this.cookies = new Cookie();
 		var sID = this.cookies.get('sessionID');
 		var user = this.cookies.get('username');
-		console.log("SID: " + sID + ', user: ' + user)
+
 		if(sID && user){
 			this.setState({
 				username: user,
@@ -37,7 +37,6 @@ class App extends React.Component{
 	componentDidMount(){
 		var sID = this.cookies.get('sessionID');
 		var user = this.cookies.get('username');
-		console.log("SID: " + sID + ', user: ' + user)
 	}
 
 	receiveLogin(username, SID, save){
@@ -47,12 +46,10 @@ class App extends React.Component{
 		})
 
 		if(save){
-			console.log("LONG SAVE SAVED");
 			var today = new Date();
 			var oneweek = new Date(today.getFullYear(), today.getMonth(), today.getDate()+7)
 			this.cookies.set('username', username, {path: './', expires: oneweek });
 			this.cookies.set('sessionID', SID, { path: './', expires: oneweek });
-			console.log(oneweek)
 		}
 		else{
 			this.cookies.set('username', username, {path: './' });
@@ -71,7 +68,6 @@ class App extends React.Component{
 	}
 
 	renderPage(SID){
-		console.log(SID)
 		if(SID){
 			return (<NotePage 
 						sessionID={this.state.sessionID}

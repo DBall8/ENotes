@@ -41,7 +41,6 @@ class Note extends React.Component{
 		this.props.note.content = this.contentArea.value;
 		this.props.note.saved = false;
 		this.props.markUnsaved();
-		console.log("INPUT")
 	}
 
 	keyInput(e){
@@ -54,7 +53,6 @@ class Note extends React.Component{
 
 	rightClick(e){
 		if(e.button == 2){
-			console.log("RIGHT CLICK")
 			this.props.launchOptions(this.props.tag, e.clientX, e.clientY);
 		}
 	}
@@ -79,7 +77,9 @@ class Note extends React.Component{
 					onMouseDown={(e) => this.dragStart(e)} 
 				>
                     <input type="image" src={plusIm} className={"newButton button"} onClick={(e) => this.addNote(e)} />
-                    <input type="image" src={delIm} className={"deleteButton button"} onClick={(e) => this.deleteNote(e)} />
+                    <input type="image" src={delIm} className={"deleteButton button"} onClick={(e) => {
+                    	if(window.confirm("Are you sure you want to delete this note?")){this.deleteNote(e)}
+                    }} />
 				</div>
 				<div className="noteBody" style={{height: this.props.note.height - 40}}>
                     <textarea className="noteContent" 
