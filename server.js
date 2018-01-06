@@ -5,7 +5,7 @@ var http = require('http')
 	, url = require('url')
 	, crypto = require('crypto')
 	, pg = require('pg')
-	, port = process.env.PORT || 8080
+	, port = process.env.PORT || 8081
 
 
 if (process.env.DATABASE_URL){

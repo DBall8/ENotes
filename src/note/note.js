@@ -44,6 +44,14 @@ class Note extends React.Component{
 		console.log("INPUT")
 	}
 
+	keyInput(e){
+		if(e.key === 'Tab'){
+			e.preventDefault();
+			this.contentArea.value += '    ';
+		}
+
+	}
+
 	rightClick(e){
 		if(e.button == 2){
 			console.log("RIGHT CLICK")
@@ -79,7 +87,8 @@ class Note extends React.Component{
 						ref={(input) => this.contentArea = input}
 						defaultValue={this.props.note.content}
 						onBlur={(e) => this.updateNote(e)} 
-                        onInput={(e) => this.inputEvent(e)} />
+                        onInput={(e) => this.inputEvent(e)}
+                        onKeyDown={(e) => this.keyInput(e)} />
                     
                 </div>
                 <img src={resizeIm} alt="Drag to resize" className="resize" style={{
