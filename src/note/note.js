@@ -63,6 +63,7 @@ class Note extends React.Component{
 		}
 		return(
 			<div className="note" style={{
+				background: this.props.note.colors.body || '#ffe062',
 				width: this.props.note.width,
 				height: this.props.note.height,
 				left: this.props.note.x,

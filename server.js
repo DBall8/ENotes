@@ -19,7 +19,7 @@ else {
 var db = new pg.Client(dbURL);
 db.connect().then(() =>{
 	db.query('CREATE TABLE IF NOT EXISTS users (username VARCHAR(252), hash VARCHAR(252), salt VARCHAR(252), key VARCHAR(252))');
-	db.query('CREATE TABLE IF NOT EXISTS notes (key VARCHAR(252), tag VARCHAR(252), content VARCHAR(4096), x INTEGER, y INTEGER, width INTEGER, height INTEGER, zindex INTEGER)')
+	db.query('CREATE TABLE IF NOT EXISTS notes (key VARCHAR(252), tag VARCHAR(252), content VARCHAR(4096), x INTEGER, y INTEGER, width INTEGER, height INTEGER, zindex INTEGER, colors VARCHAR(512))')
 	console.log("Successfully connected to database.");
 }, (err) =>{
 	console.error("Failed to connect to database.")
@@ -355,9 +355,9 @@ function addNote(req, res) {
 		var key = sessionIDs[input.sessionID].key;
 
 		// add the note to the database
-        var values = [key, input.tag, input.content, input.x, input.y, input.width, input.height, input.zindex]
+        var values = [key, input.tag, input.content, input.x, input.y, input.width, input.height, input.zindex, JSON.stringify(input.colors)]
         
-        db.query('INSERT INTO notes VALUES ($1, $2, $3, $4, $5, $6, $7, $8)', values).then(() =>{
+        db.query('INSERT INTO notes VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)', values).then(() =>{
         	// successful
         	console.log(input.tag + " successfully added")
         	res.writeHead(200);
@@ -439,8 +439,8 @@ function updateNote(req, res){
 		var key = sessionIDs[input.sessionID].key;
 
 		// update contents of the note
-        var arr = [input.newcontent, input.newx, input.newy, input.newW, input.newH, input.newZ, key, input.tag]
-		db.query("UPDATE notes SET content=$1, x=$2, y=$3, width=$4, height=$5, zindex=$6 WHERE key=$7 AND tag=$8", arr).then(() =>{
+        var arr = [input.newcontent, input.newx, input.newy, input.newW, input.newH, input.newZ, JSON.stringify(input.newColors), key, input.tag]
+		db.query("UPDATE notes SET content=$1, x=$2, y=$3, width=$4, height=$5, zindex=$6, colors=$7 WHERE key=$8 AND tag=$9", arr).then(() =>{
 			res.writeHead(200)
 			var response = {
 				sessionExpired: false

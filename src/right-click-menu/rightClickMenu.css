@@ -18,3 +18,13 @@
 .menuitem:hover{
 	background: #d6d5d5;
 }
+
+.subMenu{
+	position: absolute;
+	background: white;
+	border: 2px solid black;
+	padding: 2px;
+	margin: 0;
+	width: 400px;
+	height: 100px;
+}

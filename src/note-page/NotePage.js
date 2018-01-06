@@ -146,7 +146,7 @@ class NotePage extends React.Component {
     // add a new note class for each object
     data.map((anote) => {
       // build note class
-      var n = new note(anote.content, anote.x, anote.y, anote.width, anote.height);
+      var n = new note(anote.content, anote.x, anote.y, anote.width, anote.height, JSON.parse(anote.colors));
       n.zindex = anote.zindex;
       // insert to notes
       notes[anote.tag] = n;
@@ -160,7 +160,7 @@ class NotePage extends React.Component {
   // Adds a new note
   addNote(x, y) {
     // build empty note
-    var n = new note('', x, y, 300, 200);
+    var n = new note('', x, y, 300, 200, {body: '#ffe062'});
     n.selected = true; //start selected
     n.zindex = 9999; // start on top
 
@@ -191,7 +191,8 @@ class NotePage extends React.Component {
             y: n.y,
             width: n.width,
             height: n.height,
-            zindex: n.zindex
+            zindex: n.zindex,
+            colors: n.colors
         })
     }).then((result) => {
       if(result.status !== 200){
@@ -261,7 +262,8 @@ class NotePage extends React.Component {
           newy: note.y,
           newW: note.width,
           newH: note.height,
-          newZ: note.zindex
+          newZ: note.zindex,
+          newColors: note.colors
         })
     }).then((result) => {
       if(result.status !== 200){
