@@ -18,7 +18,7 @@ class Login extends React.Component{
 		this.passwordsDontMatch = false;
 	}
 
-	login(e){
+	login(){
 		var usernameAttempt = this.usernameInput.value;
 		var passwordAttempt = this.passwordInput.value;
 
@@ -76,7 +76,7 @@ class Login extends React.Component{
 		}
 	}
 
-	newuser(e){
+	newuser(){
 		var usernameAttempt = this.usernameInput.value;
 		var passwordAttempt = this.passwordInput.value;
 		var confirmPass = this.confirmpasswordInput.value;
@@ -172,6 +172,17 @@ class Login extends React.Component{
 		})
 	}
 
+	inputKeyPress(input, e){
+		if(e.key == 'Enter'){
+			if(input === 'login'){
+				this.login();
+			}
+			else if(input === "newuser"){
+				this.newuser()
+			}
+		}
+	}
+
 
 	renderPage(signingUp){
 		if(signingUp){
@@ -186,12 +197,16 @@ class Login extends React.Component{
 					<div className="contentPanel">
 						<form>
 							<label>Username:</label><br />
-							<input className="loginInput" type="text" name="username" ref={(input) => this.usernameInput = input} /><br />
+							<input className="loginInput" type="text" name="username" 
+								ref={(input) => this.usernameInput = input} 
+								onKeyPress={(e) => this.inputKeyPress('newuser', e)}/><br />
 							<label>Password:</label><br />
-							<input className="loginInput" type="password" name="password" ref={(input) => this.passwordInput = input} /><br />
+							<input className="loginInput" type="password" name="password" 
+								ref={(input) => this.passwordInput = input} 
+								onKeyPress={(e) => this.inputKeyPress('newuser', e)}/><br />
 							<label>Confirm password:</label><br />
 							<input className="loginInput" type="password" name="confirmpassword" ref={(input) => this.confirmpasswordInput = input} /><br />
-							<button className="loginButton" type="button" onClick={(e) => this.newuser(e)}>Create account</button>
+							<button className="loginButton" type="button" onClick={(e) => this.newuser()}>Create account</button>
 						</form>
 						<br />
 						<span className="bottomSpan"> Already have an account? <a className="bottomLink" href="" onClick={(e) => this.linkClick(e, false)}>Log in!</a></span>
@@ -211,12 +226,16 @@ class Login extends React.Component{
 					<div className="contentPanel">
 						<form>
 							<label>Username:</label><br />
-							<input className="loginInput" type="text" name="username" ref={(input) => this.usernameInput = input} /><br />
+							<input className="loginInput" type="text" name="username" 
+								ref={(input) => this.usernameInput = input}
+								onKeyPress={(e) => this.inputKeyPress('login', e)} /><br />
 							<label>Password:</label><br />
-							<input className="loginInput" type="password" name="password" ref={(input) => this.passwordInput = input} /><br />
+							<input className="loginInput" type="password" name="password" 
+								ref={(input) => this.passwordInput = input} 
+								onKeyPress={(e) => this.inputKeyPress('login', e)}/><br />
 							<input className="checkbox" type="checkbox" ref={(input) => this.checkbox = input} />Stay logged in
 							<br />
-							<button className="loginButton" type="button" onClick={(e) => this.login(e)}>Log in</button>
+							<button className="loginButton" type="button" onClick={(e) => this.login()}>Log in</button>
 						</form>
 						<br />
 						

@@ -348,7 +348,6 @@ class NotePage extends React.Component {
 
   resizeStart(tag, x, y) {
       // save the offset from the corner of the note, so when dragging the note will move with the cursor
-      var note = this.state.notes[tag];
       this.resize = { tag: tag, startX: x, startY: y }
   }
 
