@@ -474,7 +474,7 @@ function getNotes(uri, res){
 	var key = sessionIDs[input.sessionID].key;
 	
 	// collect all notes stored for the user in an array
-	db.query("SELECT * FROM notes WHERE key=$1", [key], function(error, resp){
+	db.query("SELECT tag, content, x, y, width, height, zindex FROM notes WHERE key=$1", [key], function(error, resp){
 		// send the array
 		res.writeHead(200, {'Content-type': 'application/json'});
 		var response = {
