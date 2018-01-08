@@ -5,7 +5,7 @@ var http = require('http')
 	, url = require('url')
 	, crypto = require('crypto')
 	, pg = require('pg')
-	, port = process.env.PORT || 8081
+	, port = process.env.PORT || 8080
 
 
 if (process.env.DATABASE_URL){
@@ -355,7 +355,7 @@ function addNote(req, res) {
 		var key = sessionIDs[input.sessionID].key;
 
 		// add the note to the database
-        var values = [key, input.tag, input.content, input.x, input.y, input.width, input.height, input.zindex, JSON.stringify(input.colors)]
+        var values = [key, input.tag, input.content, input.x, input.y, input.width, input.height, input.zindex, input.colors]
         
         db.query('INSERT INTO notes VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)', values).then(() =>{
         	// successful
@@ -439,7 +439,7 @@ function updateNote(req, res){
 		var key = sessionIDs[input.sessionID].key;
 
 		// update contents of the note
-        var arr = [input.newcontent, input.newx, input.newy, input.newW, input.newH, input.newZ, JSON.stringify(input.newColors), key, input.tag]
+        var arr = [input.newcontent, input.newx, input.newy, input.newW, input.newH, input.newZ, input.newColors, key, input.tag]
 		db.query("UPDATE notes SET content=$1, x=$2, y=$3, width=$4, height=$5, zindex=$6, colors=$7 WHERE key=$8 AND tag=$9", arr).then(() =>{
 			res.writeHead(200)
 			var response = {

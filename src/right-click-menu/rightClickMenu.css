@@ -2,13 +2,19 @@
 	position: absolute;
 	width: 200px;
 	z-index: 10000;
-
-	background: white;
-	border: 2px solid black;
+	background: none;
 	padding: 2px;
 	margin: 0;
 
 	cursor: default;
+}
+
+.optionsHolder{
+	float: left;
+	width: 130px;
+	box-sizing: border-box;
+	background: white;
+	border: 2px solid black;
 }
 
 .menuitem{
@@ -20,11 +26,20 @@
 }
 
 .subMenu{
-	position: absolute;
+	box-sizing: border-box;
+	display: block;
+	float: right;
+	left: 200px;
 	background: white;
 	border: 2px solid black;
 	padding: 2px;
 	margin: 0;
-	width: 400px;
-	height: 100px;
+	width: 70px;
+}
+
+.colorOption{
+	border-radius: 20px;
+	height:40px;
+	width: 40px;
+	margin: auto;
 }

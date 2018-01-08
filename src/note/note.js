@@ -74,7 +74,10 @@ class Note extends React.Component{
             onMouseUp={(e) => this.rightClick(e)}
             onContextMenu={(e) => e.preventDefault()}>
 
-				<div className={"noteHead " + (this.props.note.selected? 'orange': 'yellow')} 
+				<div className="noteHead" 
+					style={{
+						background: (this.props.note.selected? this.props.note.colors.head: 'none')
+					}}
 					onMouseDown={(e) => this.dragStart(e)} 
 				>
                     <input type="image" src={plusIm} className={"newButton button"} onClick={(e) => this.addNote(e)} />

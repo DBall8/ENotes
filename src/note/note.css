@@ -74,14 +74,6 @@ input, textarea {
     resize: none;
 }
 
-.orange {
-    background: #ddaf00;
-}
-
-.yellow {
-    background: none;
-}
-
 .resize {
     image-rendering: crisp-edges;
     image-resolution: from-image;
