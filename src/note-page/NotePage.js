@@ -275,8 +275,6 @@ class NotePage extends React.Component {
     notes[tag].colors = newcolor;
     this.setState({notes: notes}, () => {
       this.updateNote(tag)
-      console.log("HERE");
-      console.log(this.state.notes);
     });
   }
 
