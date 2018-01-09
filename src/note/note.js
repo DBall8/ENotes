@@ -63,6 +63,7 @@ class Note extends React.Component{
 		}
 		return(
 			<div className="note" style={{
+				background: this.props.note.colors.body || '#ffe062',
 				width: this.props.note.width,
 				height: this.props.note.height,
 				left: this.props.note.x,
@@ -73,7 +74,10 @@ class Note extends React.Component{
             onMouseUp={(e) => this.rightClick(e)}
             onContextMenu={(e) => e.preventDefault()}>
 
-				<div className={"noteHead " + (this.props.note.selected? 'orange': 'yellow')} 
+				<div className="noteHead" 
+					style={{
+						background: (this.props.note.selected? this.props.note.colors.head: 'none')
+					}}
 					onMouseDown={(e) => this.dragStart(e)} 
 				>
                     <input type="image" src={plusIm} className={"newButton button"} onClick={(e) => this.addNote(e)} />

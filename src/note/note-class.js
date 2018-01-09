@@ -1,5 +1,5 @@
 export default class note{
-	constructor(content, x, y, width, height){
+	constructor(content, x, y, width, height, colors){
 		this.content = content;
 		this.x = x;
 		this.y = y;
@@ -8,5 +8,6 @@ export default class note{
 		this.selected = false;
 		this.zindex = 9000;
 		this.saved = true;
+		this.colors = colors;
 	}
 }

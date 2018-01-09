@@ -3,6 +3,7 @@ import Note from '../note/note';
 import note from '../note/note-class';
 import RightClickMenu from '../right-click-menu/rightClickMenu';
 import './NotePage.css';
+import ColorChart from '../resources/colorChart';
 
 class NotePage extends React.Component {
 
@@ -17,15 +18,14 @@ class NotePage extends React.Component {
     this.dragStart = this.dragStart.bind(this);
     this.resizeStart = this.resizeStart.bind(this);
     this.markUnsaved = this.markUnsaved.bind(this);
-    this.launchOptions = this.launchOptions.bind(this);
+    this.updateNoteColor = this.updateNoteColor.bind(this);
 
     // watch the state of each note
     this.state = {
-      notes: {},
-      rightClickMenu:  {note: '', display: 'none', x: 0, y: 0}
-
+      notes: {}
     }
 
+    this.defaultColors = ColorChart.yellow;
     this.unsaved = false;
 
     // object to hold info about the dragging note
@@ -38,17 +38,7 @@ class NotePage extends React.Component {
   setNoteState(notes){
     this.setState((prevstate) => {
       return {
-        notes: notes,
-        rightClickMenu: prevstate.rightClickMenu
-      }
-    })
-  }
-
-  setRightMenuState(obj){
-    this.setState((prevstate) => {
-      return {
-        notes: prevstate.notes,
-        rightClickMenu: obj
+        notes: notes
       }
     })
   }
@@ -57,16 +47,11 @@ class NotePage extends React.Component {
 
   componentWillMount(){
 
-      window.addEventListener('mousedown', (event) => {
-        if(this.state.rightClickMenu.note){
-            var obj = {
-              note: '',
-              display: 'none',
-              x: 0,
-              y: 0
-            }
-            this.setRightMenuState(obj)
-          }
+      window.addEventListener('click', (event) => {
+        if(this.rightClickMenu && this.rightClickMenu.state.display === 'block'){
+          this.rightClickMenu.hide();
+        }
+        
       })
       window.addEventListener('mouseup', (event) => {
           this.dragEnd(event)
@@ -146,7 +131,7 @@ class NotePage extends React.Component {
     // add a new note class for each object
     data.map((anote) => {
       // build note class
-      var n = new note(anote.content, anote.x, anote.y, anote.width, anote.height);
+      var n = new note(anote.content, anote.x, anote.y, anote.width, anote.height, JSON.parse(anote.colors));
       n.zindex = anote.zindex;
       // insert to notes
       notes[anote.tag] = n;
@@ -160,7 +145,7 @@ class NotePage extends React.Component {
   // Adds a new note
   addNote(x, y) {
     // build empty note
-    var n = new note('', x, y, 300, 200);
+    var n = new note('', x, y, 300, 200, JSON.stringify(this.defaultColors));
     n.selected = true; //start selected
     n.zindex = 9999; // start on top
 
@@ -191,7 +176,8 @@ class NotePage extends React.Component {
             y: n.y,
             width: n.width,
             height: n.height,
-            zindex: n.zindex
+            zindex: n.zindex,
+            colors: n.colors
         })
     }).then((result) => {
       if(result.status !== 200){
@@ -261,7 +247,8 @@ class NotePage extends React.Component {
           newy: note.y,
           newW: note.width,
           newH: note.height,
-          newZ: note.zindex
+          newZ: note.zindex,
+          newColors: JSON.stringify(note.colors)
         })
     }).then((result) => {
       if(result.status !== 200){
@@ -281,6 +268,16 @@ class NotePage extends React.Component {
       }
     });
      // FETCH */
+  }
+
+  updateNoteColor(tag, newcolor){
+    var notes = {...this.state.notes};
+    notes[tag].colors = newcolor;
+    this.setState({notes: notes}, () => {
+      this.updateNote(tag)
+      console.log("HERE");
+      console.log(this.state.notes);
+    });
   }
 
   // Select a note
@@ -382,17 +379,6 @@ class NotePage extends React.Component {
     this.unsaved = true;
   }
 
-  launchOptions(tag, x, y){
-    var obj = this.state.rightClickMenu;
-
-    obj.note = tag;
-    obj.display = 'block';
-    obj.x = x;
-    obj.y = y;
-
-    this.setRightMenuState(obj);
-  }
-
   logout(){
 
     fetch("/logout", {
@@ -429,12 +415,13 @@ class NotePage extends React.Component {
             resizeStart={this.resizeStart}
             markUnsaved={this.markUnsaved}
 
-            launchOptions={this.launchOptions}
+            launchOptions={this.rightClickMenu.show}
           />  
         )
         }
         <RightClickMenu 
-          obj={this.state.rightClickMenu}
+          ref={(input) => this.rightClickMenu = input}
+          updateNoteColor={this.updateNoteColor}
         />
       </div>
     );

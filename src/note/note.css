@@ -1,5 +1,4 @@
 .note {
-    background: #ffe062;
     border: 1px solid black;
     border-radius: 5px;
     display: block;
@@ -73,14 +72,6 @@
 input, textarea {
     box-sizing: border-box;
     resize: none;
-}
-
-.orange {
-    background: #ddaf00;
-}
-
-.yellow {
-    background: none;
 }
 
 .resize {
