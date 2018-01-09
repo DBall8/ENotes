@@ -18,10 +18,10 @@ else {
 // open the database
 var db = new pg.Client(dbURL);
 db.connect().then(() =>{
-	db.query('UPDATE notes SET colors=$1', JSON.stringify({
+	db.query('UPDATE notes SET colors=$1', [JSON.stringify({
 		head: '#ddaf00',
 		body: '#ffe062'
-	}))
+	})])
 	//db.query('CREATE TABLE IF NOT EXISTS users (username VARCHAR(252), hash VARCHAR(252), salt VARCHAR(252), key VARCHAR(252))');
 	//db.query('CREATE TABLE IF NOT EXISTS notes (key VARCHAR(252), tag VARCHAR(252), content VARCHAR(4096), x INTEGER, y INTEGER, width INTEGER, height INTEGER, zindex INTEGER, colors VARCHAR(512))')
 	console.log("Successfully connected to database.");
