@@ -18,8 +18,12 @@ else {
 // open the database
 var db = new pg.Client(dbURL);
 db.connect().then(() =>{
-	db.query('CREATE TABLE IF NOT EXISTS users (username VARCHAR(252), hash VARCHAR(252), salt VARCHAR(252), key VARCHAR(252))');
-	db.query('CREATE TABLE IF NOT EXISTS notes (key VARCHAR(252), tag VARCHAR(252), content VARCHAR(4096), x INTEGER, y INTEGER, width INTEGER, height INTEGER, zindex INTEGER, colors VARCHAR(512))')
+	db.query('UPDATE notes SET colors=$1', JSON.stringify({
+		head: '#ddaf00',
+		body: '#ffe062'
+	}))
+	//db.query('CREATE TABLE IF NOT EXISTS users (username VARCHAR(252), hash VARCHAR(252), salt VARCHAR(252), key VARCHAR(252))');
+	//db.query('CREATE TABLE IF NOT EXISTS notes (key VARCHAR(252), tag VARCHAR(252), content VARCHAR(4096), x INTEGER, y INTEGER, width INTEGER, height INTEGER, zindex INTEGER, colors VARCHAR(512))')
 	console.log("Successfully connected to database.");
 }, (err) =>{
 	console.error("Failed to connect to database.")
@@ -474,7 +478,7 @@ function getNotes(uri, res){
 	var key = sessionIDs[input.sessionID].key;
 	
 	// collect all notes stored for the user in an array
-	db.query("SELECT tag, content, x, y, width, height, zindex FROM notes WHERE key=$1", [key], function(error, resp){
+	db.query("SELECT tag, content, x, y, width, height, zindex, colors FROM notes WHERE key=$1", [key], function(error, resp){
 		// send the array
 		res.writeHead(200, {'Content-type': 'application/json'});
 		var response = {
