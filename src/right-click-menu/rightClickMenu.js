@@ -38,7 +38,7 @@ class RightClickMenu extends React.Component{
 			x: x,
 			y: y,
 			selectedOption: null
-		})
+		});
 	}
 
 	optionSelected(e, option){

@@ -48,7 +48,17 @@ class NotePage extends React.Component {
   componentWillMount(){
 
       window.addEventListener('click', (event) => {
-        if(this.rightClickMenu && this.rightClickMenu.state.display === 'block'){
+        var rightClick = false;
+        if("which" in event){
+            //console.log("WHICH: " + e.which);
+            rightClick = event.which == 3;
+        }
+        if("button" in event){
+            //console.log("BUTTON: " + e.button);
+            rightClick = event.button == 2;
+        }
+
+        if(!rightClick && this.rightClickMenu && this.rightClickMenu.state.display === 'block'){
           this.rightClickMenu.hide();
         }
         

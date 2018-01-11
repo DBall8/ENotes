@@ -52,7 +52,18 @@ class Note extends React.Component{
 	}
 
 	rightClick(e){
-		if(e.button == 2){
+	    var rightClick = false;
+	    if("which" in e){
+	        //console.log("WHICH: " + e.which);
+	        rightClick = e.which == 3;
+	    }
+	    if("button" in e){
+	        //console.log("BUTTON: " + e.button);
+	        rightClick = e.button == 2;
+	    }
+
+		if(rightClick){
+		    e.stopPropagation();
 			this.props.launchOptions(this.props.tag, e.clientX, e.clientY);
 		}
 	}
