@@ -68,13 +68,27 @@ class Note extends React.Component{
 		}
 	}
 
+	getBodyColor(colors){
+	    if(colors && colors.body){
+	        return colors.body;
+	    }
+	    return '#ffe062';
+	}
+
+	getHeadColor(colors){
+    	    if(colors && colors.head){
+    	        return colors.head;
+    	    }
+    	    return '#ddaf00';
+    	}
+
 	render(){
 		if(this.props.note == null){
 			return null;
 		}
 		return(
 			<div className="note" style={{
-				background: this.props.note.colors.body || '#ffe062',
+				background: this.getBodyColor(this.props.note.colors),
 				width: this.props.note.width,
 				height: this.props.note.height,
 				left: this.props.note.x,
@@ -87,7 +101,7 @@ class Note extends React.Component{
 
 				<div className="noteHead" 
 					style={{
-						background: (this.props.note.selected? this.props.note.colors.head: 'none')
+						background: (this.props.note.selected? this.getHeadColor(this.props.note.colors): 'none')
 					}}
 					onMouseDown={(e) => this.dragStart(e)} 
 				>

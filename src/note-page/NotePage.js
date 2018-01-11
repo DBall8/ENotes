@@ -149,9 +149,10 @@ class NotePage extends React.Component {
         console.error("Failed to parse colors json");
         console.error(e);
         console.error(anote.colors);
+        colors = {};
       }
 
-      var n = new note(anote.content, anote.x, anote.y, anote.width, anote.height, );
+      var n = new note(anote.content, anote.x, anote.y, anote.width, anote.height, colors);
       n.zindex = anote.zindex;
       // insert to notes
       notes[anote.tag] = n;
