@@ -141,7 +141,17 @@ class NotePage extends React.Component {
     // add a new note class for each object
     data.map((anote) => {
       // build note class
-      var n = new note(anote.content, anote.x, anote.y, anote.width, anote.height, JSON.parse(anote.colors));
+      var colors;
+      try{
+        colors = JSON.parse(anote.colors);
+      }
+      catch(e){
+        console.error("Failed to parse colors json");
+        console.error(e);
+        console.error(anote.colors);
+      }
+
+      var n = new note(anote.content, anote.x, anote.y, anote.width, anote.height, );
       n.zindex = anote.zindex;
       // insert to notes
       notes[anote.tag] = n;
