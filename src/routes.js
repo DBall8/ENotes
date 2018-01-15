@@ -1,12 +1,21 @@
 import React from 'react';
-import { BrowserRouter, Route } from 'react-router-dom';
+import { BrowserRouter, Switch, Route, Redirect } from 'react-router-dom';
 
 import App from './App';
+import NotePage from './note-page/NotePage';
+import Login from './login/Login';
 
 const Routes = (props) => (
 	<BrowserRouter {...props}>
-		<Route path="/" component={App} />
-	</BrowserRouter>
+        <div>
+            <Switch>
+                <Route path="/loginpage" component={Login} />
+                <Route path="/" component={NotePage} />
+                <Redirect from="*" to="/" />
+            </Switch>
+            
+        </div>
+    </BrowserRouter>
 );
 
 export default Routes;

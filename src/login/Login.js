@@ -41,18 +41,18 @@ class Login extends React.Component{
 		else{
 
 			fetch('/login', {
-				method: 'POST',
-				credentials: 'same-origin',
+                method: 'POST',
+                credentials: 'same-origin',
 				body: JSON.stringify({
 					username: usernameAttempt,
 					password: passwordAttempt,
 					stayLoggedIn: this.checkbox.checked
 				})
 			}).then((res) => {
-				if(res.status == 200){
-					return res.json();
+                if (res.status == 200) {
+                    window.location.href = "/notes";
 				}
-				else{
+                else {
 					console.error("Could not connect to server.\n" + res.statusText);
 					var loginError = {
 						visible: true,
@@ -60,17 +60,6 @@ class Login extends React.Component{
 					}
 					this.updateLoginError(loginError);
 					return null;
-				}
-			}).then((result) => {
-				if(result.successful){
-					this.props.receiveLogin(usernameAttempt, result.sessionID, this.checkbox.checked);
-				}
-				else{
-					var loginError = {
-						visible: true,
-						text: "Incorrect username or password"
-					}
-					this.updateLoginError(loginError);
 				}
 			})
 		}
@@ -124,7 +113,12 @@ class Login extends React.Component{
 				})
 			}).then((res) => {
 				if(res.status == 200){
-					return res.json();
+                    try {
+                        return res.json();
+                    }
+                    catch (e) {
+                        return null;
+                    }
 				}
 				else{
 					console.error("Could not connect to server.\n" + res.statusText);
@@ -143,8 +137,8 @@ class Login extends React.Component{
 					}
 					this.updateLoginError(loginError);
 				}
-				else{
-					this.props.receiveLogin(usernameAttempt, result.sessionID, false);
+                else {
+                    window.location.href = "/notes";
 				}
 			})
 		}

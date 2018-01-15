@@ -27,6 +27,7 @@ class NotePage extends React.Component {
 
     this.defaultColors = ColorChart.yellow;
     this.unsaved = false;
+    this.username = '';
 
     // object to hold info about the dragging note
     this.drag = {};
@@ -100,28 +101,30 @@ class NotePage extends React.Component {
 
   // ask server for notes
   getNotes(){
-
     // fetch from /api
       //* FETCH
-    fetch("/api?sessionID=" + this.props.sessionID)
+      fetch("/api", {
+          method: "GET",
+          credentials: 'same-origin'
+      })
     .then((res) => {
-        if(res.status !== 200){
-          console.error(res.statusText);
+        if (res.status !== 200) {
+            console.error(res);
+            return null;
+        }
+        else if (res.redirected) {
+            window.location.href = '/loginpage';
         }
         else{ return res.json()}
-      }) // turn result to json (??)
-        .then((data) => {
-          if(data.sessionExpired){
-            alert("Session Expired");
-            this.logout();
-          }
-          else{
+      }) 
+          .then((data) => {
+            this.username = data.username;
             this.loadNotes(data.notes); // load note
             // if no notes were loaded, create a new one
             if (Object.keys(this.state.notes).length <= 0) {
                 this.addNote(100, 100);
             }
-          }
+          
         });
       //FETCH */
 
@@ -189,8 +192,8 @@ class NotePage extends React.Component {
     // update DB
     fetch("/api", {
         method: "POST",
+        credentials: 'same-origin',
         body: JSON.stringify({
-            sessionID: this.props.sessionID,
             tag: t,
             content: n.content,
             x: n.x,
@@ -205,15 +208,16 @@ class NotePage extends React.Component {
         console.error("ERROR: Server response: " + result.status)
         console.error(result.statusText);
       }
+      else if (result.redirected) {
+        window.location.href = '/loginpage';
+      }
       else{
         return result.json();
+
       }
       return;
     }).then((res) =>{
-      if(res.sessionExpired){
-          alert("Session Expired");
-          this.logout();
-      }
+
     });
 
     //FETCH */
@@ -231,8 +235,8 @@ class NotePage extends React.Component {
       //* FETCH
     fetch("/api", {
         method: "DELETE",
+        credentials: 'same-origin',
         body: JSON.stringify({
-          sessionID: this.props.sessionID,
           tag: tag
         })
     }).then((result) => {
@@ -240,14 +244,14 @@ class NotePage extends React.Component {
         console.error("ERROR: Server response: " + result.status)
         console.error(result.statusText);
       }
+      else if (result.redirected) {
+        window.location.href = '/loginpage';
+      }
       else{
-        return result.json()
+        return result.json();
       }
     }).then((res) =>{
-      if(res.sessionExpired){
-          alert("Session Expired");
-          this.logout();
-      }
+
     });
     //FETCH */
   }
@@ -260,8 +264,8 @@ class NotePage extends React.Component {
       //* FETCH
     fetch("/api", {
         method: "PUT",
+        credentials: 'same-origin',
         body: JSON.stringify({
-          sessionID: this.props.sessionID,
           tag: tag,
           newcontent: note.content,
           newx: note.x,
@@ -276,17 +280,15 @@ class NotePage extends React.Component {
         console.error("ERROR: Server response: " + result.status)
         console.error(result.statusText);
       }
+      else if (result.redirected) {
+        window.location.href = '/loginpage';
+      }
       else{
         return result.json();
+  
       }
     }).then((res) =>{
-      if(res.sessionExpired){
-          alert("Session Expired");
-          this.logout();
-      }
-      else{
         note.saved = true;
-      }
     });
      // FETCH */
   }
@@ -402,23 +404,23 @@ class NotePage extends React.Component {
 
     fetch("/logout", {
         method: "POST",
-        body: JSON.stringify({
-          sessionID: this.props.sessionID
-        })
+        credentials: 'same-origin'
     }).then((result) => {
       if(result.status !== 200){
         console.error("ERROR: Server response: " + result.status)
         console.error(result.statusText);
+        }
+      else {
+          window.location.href = "/loginpage";
       }
     });
-    this.props.logout();
   }
 
   // draws the App
   render() {
     return (
       <div className="App" >
-        <h1 className="title">Welcome {this.props.username}!
+        <h1 className="title">Welcome {this.username}!
         <button className="logoutButton" onClick={(e) => this.logout()}>Logout</button>
         </h1>
         { Object.keys(this.state.notes).map((key) =>

@@ -3,7 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
+    "client-sessions": "^0.8.0",
     "crypto": "^1.0.1",
+    "express": "^4.16.2",
     "pg": "^7.4.0",
     "react": "^16.2.0",
     "react-dom": "^16.2.0",
