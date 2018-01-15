@@ -113,7 +113,7 @@ class NotePage extends React.Component {
             return null;
         }
         else if (res.redirected) {
-            window.location.href = '/loginpage';
+            window.location.href = '/login';
         }
         else{ return res.json()}
       }) 
@@ -209,7 +209,7 @@ class NotePage extends React.Component {
         console.error(result.statusText);
       }
       else if (result.redirected) {
-        window.location.href = '/loginpage';
+        window.location.href = '/login';
       }
       else{
         return result.json();
@@ -245,7 +245,7 @@ class NotePage extends React.Component {
         console.error(result.statusText);
       }
       else if (result.redirected) {
-        window.location.href = '/loginpage';
+        window.location.href = '/login';
       }
       else{
         return result.json();
@@ -281,7 +281,7 @@ class NotePage extends React.Component {
         console.error(result.statusText);
       }
       else if (result.redirected) {
-        window.location.href = '/loginpage';
+        window.location.href = '/login';
       }
       else{
         return result.json();
@@ -411,7 +411,7 @@ class NotePage extends React.Component {
         console.error(result.statusText);
         }
       else {
-          window.location.href = "/loginpage";
+          window.location.href = "/login";
       }
     });
   }

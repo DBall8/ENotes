@@ -64,7 +64,7 @@ app.use((req, res, next) => {
 function requireLogin(req, res, next) {
     if (!req.user) {
         console.log("Redirect");
-        res.redirect("/loginpage");
+        res.redirect("/login");
         res.end(JSON.stringify({ sessionExpired: true }));
     }
     else {
@@ -76,7 +76,7 @@ app.get('/', requireLogin, (req, res) => {
     sendFile(res, './build/index.html');
 })
 
-app.get('/loginpage', (req, res) => {
+app.get('/login', (req, res) => {
     sendFile(res, './build/index.html');
 })
 

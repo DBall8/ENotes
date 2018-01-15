@@ -9,7 +9,7 @@ const Routes = (props) => (
 	<BrowserRouter {...props}>
         <div>
             <Switch>
-                <Route path="/loginpage" component={Login} />
+                <Route path="/login" component={Login} />
                 <Route path="/" component={NotePage} />
                 <Redirect from="*" to="/" />
             </Switch>
