@@ -171,7 +171,8 @@ function login(req, res) {
 			if(key){
 				// build a response object stating that the login was successful and send the generated sessionID
                 res.writeHead(200);
-                res.end();
+                response = { successful: true };
+                res.end(JSON.stringify(response));
                 return;
 			}
 			else{

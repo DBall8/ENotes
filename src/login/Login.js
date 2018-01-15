@@ -40,28 +40,39 @@ class Login extends React.Component{
 		}
 		else{
 
-			fetch('/login', {
+            fetch('/login', {
                 method: 'POST',
                 credentials: 'same-origin',
-				body: JSON.stringify({
-					username: usernameAttempt,
-					password: passwordAttempt,
-					stayLoggedIn: this.checkbox.checked
-				})
-			}).then((res) => {
+                body: JSON.stringify({
+                    username: usernameAttempt,
+                    password: passwordAttempt,
+                    stayLoggedIn: this.checkbox.checked
+                })
+            }).then((res) => {
                 if (res.status == 200) {
-                    window.location.href = "/notes";
-				}
+                    return res.json();
+                }
                 else {
-					console.error("Could not connect to server.\n" + res.statusText);
-					var loginError = {
-						visible: true,
-						text: "Could not connect to server.\n" + res.statusText
-					}
-					this.updateLoginError(loginError);
-					return null;
-				}
-			})
+                    console.error("Could not connect to server.\n" + res.statusText);
+                    var loginError = {
+                        visible: true,
+                        text: "Could not connect to server.\n" + res.statusText
+                    }
+                    this.updateLoginError(loginError);
+                    return null;
+                }
+            }).then((result) => {
+                if (result.successful) {
+                    window.location.href = "/notes";
+                }
+                else {
+                    var loginError = {
+                        visible: true,
+                        text: "Incorrect username or password"
+                    }
+                    this.updateLoginError(loginError);
+                }
+            });
 		}
 	}
 
