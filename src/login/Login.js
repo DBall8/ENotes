@@ -63,7 +63,7 @@ class Login extends React.Component{
                 }
             }).then((result) => {
                 if (result.successful) {
-                    window.location.href = "/notes";
+                    window.location.href = "/";
                 }
                 else {
                     var loginError = {
@@ -149,7 +149,7 @@ class Login extends React.Component{
 					this.updateLoginError(loginError);
 				}
                 else {
-                    window.location.href = "/notes";
+                    window.location.href = "/";
 				}
 			})
 		}

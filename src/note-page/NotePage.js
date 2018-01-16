@@ -118,6 +118,9 @@ class NotePage extends React.Component {
         else{ return res.json()}
       }) 
           .then((data) => {
+            if(data.sessionExpired){
+              window.location.href = "/login";
+            }
             this.username = data.username;
             this.loadNotes(data.notes); // load note
             // if no notes were loaded, create a new one
@@ -217,6 +220,9 @@ class NotePage extends React.Component {
       }
       return;
     }).then((res) =>{
+      if(res.sessionExpired){
+        window.location.href = '/login';
+      }
 
     });
 
@@ -251,7 +257,9 @@ class NotePage extends React.Component {
         return result.json();
       }
     }).then((res) =>{
-
+      if(res.sessionExpired){
+        window.location.href = '/login';
+      }
     });
     //FETCH */
   }
@@ -288,7 +296,10 @@ class NotePage extends React.Component {
   
       }
     }).then((res) =>{
-        note.saved = true;
+      if(res.sessionExpired){
+        window.location.href = '/login';
+      }
+      note.saved = true;
     });
      // FETCH */
   }
