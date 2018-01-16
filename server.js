@@ -303,7 +303,8 @@ function addNote(req, res) {
         console.log(input.tag + " successfully added")
         res.writeHead(200);
         var response = {
-            successful: true
+            successful: true,
+            sessionExpired: false
 		}
 		res.end(JSON.stringify(response));
     }, (err) =>{
@@ -327,7 +328,8 @@ function deleteNote(req, res){
 		console.log(input.tag + " successfully deleted")
 		res.writeHead(200)
         var response = {
-            successful: true
+            successful: true,
+            sessionExpired: false
         }
 		res.end(JSON.stringify(response));
 	}, (err) =>{
@@ -351,7 +353,8 @@ function updateNote(req, res){
 	db.query("UPDATE notes SET content=$1, x=$2, y=$3, width=$4, height=$5, zindex=$6, colors=$7 WHERE key=$8 AND tag=$9", arr).then(() =>{
 		res.writeHead(200)
         var response = {
-            successful: true
+            successful: true,
+            sessionExpired: false
         }
 		res.end(JSON.stringify(response));
 	}, (err) => {
@@ -377,7 +380,8 @@ function getNotes(req, res) {
         var response = {
             username: req.user,
 			notes: resp.rows,
-			successful: true
+			successful: true,
+			sessionExpired: false
 		}
 		res.end(JSON.stringify(response))
 	})
