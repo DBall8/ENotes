@@ -44,9 +44,16 @@ class Note extends React.Component{
 	}
 
 	keyInput(e){
+		
 		if(e.key === 'Tab'){
+			var pos = this.contentArea.selectionStart;
 			e.preventDefault();
-			this.contentArea.value += '    ';
+			var text = this.contentArea.value;
+			var length = text.length;
+			text = text.substring(0, pos) + '    ' + text.substring(pos, length);
+			this.contentArea.value = text;
+			this.contentArea.selectionStart = pos + 4;
+			this.contentArea.selectionEnd = pos + 4;
 		}
 
 	}
