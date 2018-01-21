@@ -63,6 +63,11 @@ app.use((req, res, next) => {
 
 function requireLogin(req, res, next) {
     if (!req.user) {
+    	if(req.method == 'GET' && req.url == '/'){
+    		res.redirect('/login');
+    		res.end();
+    		return;
+    	}
         console.log("Redirect");
         //res.redirect("/login");
         res.end(JSON.stringify({ sessionExpired: true }));
