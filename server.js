@@ -4,6 +4,7 @@ var http = require('http')
 	, qs = require('querystring')
     , url = require('url')
     , express = require('express')
+    , rHTTPS = require('express-http-to-https').redirectToHTTPS
     , sessions = require('client-sessions')
 	, crypto = require('crypto')
 	, pg = require('pg')
@@ -20,8 +21,8 @@ else {
 // open the database
 var db = new pg.Client(dbURL);
 db.connect().then(() => {
-	//db.query('CREATE TABLE IF NOT EXISTS users (username VARCHAR(252), hash VARCHAR(252), salt VARCHAR(252), key VARCHAR(252))');
-	//db.query('CREATE TABLE IF NOT EXISTS notes (key VARCHAR(252), tag VARCHAR(252), content VARCHAR(4096), x INTEGER, y INTEGER, width INTEGER, height INTEGER, zindex INTEGER, colors VARCHAR(512))')
+	db.query('CREATE TABLE IF NOT EXISTS users (username VARCHAR(252), hash VARCHAR(252), salt VARCHAR(252), key VARCHAR(252))');
+	db.query('CREATE TABLE IF NOT EXISTS notes (key VARCHAR(252), tag VARCHAR(252), content VARCHAR(4096), x INTEGER, y INTEGER, width INTEGER, height INTEGER, zindex INTEGER, colors VARCHAR(512))')
 	console.log("Successfully connected to database.");
 }, (err) =>{
 	console.error("Failed to connect to database.")
@@ -37,14 +38,18 @@ var options = {
 
 var app = express();
 
+var secretStr = process.env.SECRET_STR ? process.env.SECRET_STR : "kuayborn98uno9y8vor8yaionvol ya";
 app.use(sessions({
     cookieName: 'session',
-    secret: 'eunvcoiuaiolgjmkshbvgksnhgnoijkajflaxmqoeunyt',
+    secret: secretStr,
     duration: 3 * 24 * 60 * 60 * 1000,
     activeDuration: 3 * 24 * 60 * 60 * 1000,
 }));
 
+app.use(rHTTPS([/localhost:(\d{4})/], [/\/insecure/]));
+
 app.use((req, res, next) => {
+
     var data = '';
     req.on('data', (d) => data += d);
     req.on('end', () => {
