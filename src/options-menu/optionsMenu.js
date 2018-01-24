@@ -28,14 +28,14 @@ class OptionsMenu extends React.Component {
 
     render() {
         return (
-            <div className="menu" style={{
+            <div className="optionsmenu" style={{
                 display: this.state.display,
                 clear: 'both'
             }}
                 onClick={(e) => e.stopPropagation()}>
-                <p className="menuitem">Account settings</p>
-                <p className="menuitem" onClick={(e) => window.location.href="/changelog"}>Changelog</p>
-                <p className="menuitem" onClick={(e) => this.props.logout()}>Log out</p>
+                <p className="optionsmenuitem">Account settings</p>
+                <p className="optionsmenuitem" onClick={(e) => window.location.href="/changelog"}>Changelog</p>
+                <p className="optionsmenuitem" onClick={(e) => this.props.logout()}>Log out</p>
             </div>
         )
     }

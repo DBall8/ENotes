@@ -1,4 +1,4 @@
-.menu {
+.optionsmenu {
     position: relative;
     width: 150px;
     z-index: 10000;
@@ -10,12 +10,12 @@
     left: 20px;
 }
 
-.menuitem {
+.optionsmenuitem {
     margin: 2px;
     color: black;
     font-size: 0.5em;
 }
 
-    .menuitem:hover {
+    .optionsmenuitem:hover {
         background: #d6d5d5;
     }
