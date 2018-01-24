@@ -2,6 +2,7 @@ import React from 'react';
 import Note from '../note/note';
 import note from '../note/note-class';
 import RightClickMenu from '../right-click-menu/rightClickMenu';
+import OptionsMenu from '../options-menu/optionsMenu';
 import './NotePage.css';
 import ColorChart from '../resources/colorChart';
 
@@ -19,6 +20,7 @@ class NotePage extends React.Component {
     this.resizeStart = this.resizeStart.bind(this);
     this.markUnsaved = this.markUnsaved.bind(this);
     this.updateNoteColor = this.updateNoteColor.bind(this);
+    this.logout = this.logout.bind(this);
 
     // watch the state of each note
     this.state = {
@@ -61,6 +63,10 @@ class NotePage extends React.Component {
 
         if(!rightClick && this.rightClickMenu && this.rightClickMenu.state.display === 'block'){
           this.rightClickMenu.hide();
+        }
+
+        if (!rightClick && this.optionsMenu && this.optionsMenu.state.display === 'block') {
+            this.optionsMenu.toggleDisplay();
         }
         
       })
@@ -427,12 +433,35 @@ class NotePage extends React.Component {
     });
   }
 
+  toggleOptions(e) {
+      e.stopPropagation()
+      this.optionsMenu.toggleDisplay();
+  }
+
+  refresh() {
+      this.setState({
+          notes: {}
+      });
+
+      this.getNotes();
+  }
+
   // draws the App
   render() {
     return (
       <div className="App" >
-        <h1 className="title">Welcome {this.username}!
-        <button className="logoutButton" onClick={(e) => this.logout()}>Logout</button>
+            <h1 className="title">Welcome {this.username}!
+                <div className="rightFloat optionsContainer">
+                    <button className="mainPageButton" onClick={(e) => this.refresh()}>Refresh</button>
+                    <button className="mainPageButton" onClick={(e) => this.toggleOptions(e)} >Options</button>
+                    <OptionsMenu
+                        ref={(input) => this.optionsMenu = input}
+                        logout={this.logout}
+                    />
+                </div>
+        
+            
+        
         </h1>
         { Object.keys(this.state.notes).map((key) =>
           <Note
