@@ -5,10 +5,13 @@
 
 # testing
 /coverage
+/testing tools
 
 #secrets
 secrets.js
 
+# build
+/build
 
 # misc
 src/resources/buttons.xcf
