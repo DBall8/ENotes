@@ -7,6 +7,13 @@ import './note.css';
 
 class Note extends React.Component{
 
+    constructor() {
+        super();
+
+        this.copy = this.copy.bind(this)
+        this.paste = this.paste.bind(this)
+    }
+
 	addNote(e){
 		e.stopPropagation();
 		var n = this.props.note;
@@ -56,7 +63,24 @@ class Note extends React.Component{
 			this.contentArea.selectionEnd = pos + 4;
 		}
 
-	}
+    }
+
+    copy() {
+        var start = this.contentArea.selectionStart;
+        var end = this.contentArea.selectionEnd;
+        console.log(this.contentArea.value.substring(start, end))
+        this.props.saveToMyClipboard(this.contentArea.value.substring(start, end))
+
+    }
+
+    paste() {
+        var start = this.contentArea.selectionStart;
+        var end = this.contentArea.selectionEnd;
+        var text = this.contentArea.value;
+        var length = text.length;
+        text = text.substring(0, start) + this.props.retrieveFromMyClipboard() + text.substring(end, length);
+        this.contentArea.value = text;
+    }
 
 	rightClick(e){
 	    var rightClick = false;

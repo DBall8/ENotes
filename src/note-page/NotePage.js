@@ -5,6 +5,8 @@ import RightClickMenu from '../right-click-menu/rightClickMenu';
 import OptionsMenu from '../options-menu/optionsMenu';
 import './NotePage.css';
 import ColorChart from '../resources/colorChart';
+import refreshIm from '../resources/refresh-icon.png'
+import gearIm from '../resources/gear.png'
 
 class NotePage extends React.Component {
 
@@ -21,6 +23,10 @@ class NotePage extends React.Component {
     this.markUnsaved = this.markUnsaved.bind(this);
     this.updateNoteColor = this.updateNoteColor.bind(this);
     this.logout = this.logout.bind(this);
+    this.copy = this.copy.bind(this);
+    this.saveToMyClipboard = this.saveToMyClipboard.bind(this);
+    this.retrieveFromMyClipboard = this.retrieveFromMyClipboard.bind(this);
+    this.paste = this.paste.bind(this);
 
     // watch the state of each note
     this.state = {
@@ -86,7 +92,12 @@ class NotePage extends React.Component {
     this.getNotes();
   }
 
-  componentDidMount(){
+  componentDidMount() {
+
+      this.notes = {};
+
+      this.clipboard = '';
+
     window.setInterval(() => {
       if(this.unsaved){
         this.unsaved = false;
@@ -438,6 +449,33 @@ class NotePage extends React.Component {
       this.optionsMenu.toggleDisplay();
   }
 
+  copy() {
+      Object.keys(this.state.notes).map((t) => {
+          var n = this.state.notes[t]
+          if (n.selected) {
+              this.notes[t].copy();
+          }
+      })
+  }
+
+    paste() {
+        Object.keys(this.state.notes).map((t) => {
+            var n = this.state.notes[t]
+            if (n.selected) {
+                this.notes[t].paste();
+            }
+        })
+  }
+
+    saveToMyClipboard(val) {
+        this.clipboard = val;
+    }
+
+    retrieveFromMyClipboard() {
+        console.log(this.clipboard)
+        return this.clipboard;
+    }
+
   refresh() {
       this.setState({
           notes: {}
@@ -450,10 +488,10 @@ class NotePage extends React.Component {
   render() {
     return (
       <div className="App" >
-            <h1 className="title">Welcome {this.username}!
+            <h1 className="title"><span className="welcomeMessage">Welcome {this.username}!</span>
                 <div className="rightFloat optionsContainer">
-                    <button className="mainPageButton" onClick={(e) => this.refresh()}>Refresh</button>
-                    <button className="mainPageButton" onClick={(e) => this.toggleOptions(e)} >Options</button>
+                    <input type="image" src={refreshIm} className="mainPageButton button" onClick={(e) => this.refresh()} />
+                    <input type="image" src={gearIm} className="mainPageButton button" onClick={(e) => this.toggleOptions(e)} />
                     <OptionsMenu
                         ref={(input) => this.optionsMenu = input}
                         logout={this.logout}
@@ -465,6 +503,7 @@ class NotePage extends React.Component {
         </h1>
         { Object.keys(this.state.notes).map((key) =>
           <Note
+            ref={(input) => this.notes[key] = input}
             key={key}
             tag={key}
             note={this.state.notes[key]}
@@ -475,6 +514,8 @@ class NotePage extends React.Component {
             dragStart={this.dragStart}
             resizeStart={this.resizeStart}
             markUnsaved={this.markUnsaved}
+            saveToMyClipboard={this.saveToMyClipboard}
+            retrieveFromMyClipboard={this.retrieveFromMyClipboard}
 
             launchOptions={this.rightClickMenu.show}
           />  
@@ -483,6 +524,8 @@ class NotePage extends React.Component {
         <RightClickMenu 
           ref={(input) => this.rightClickMenu = input}
           updateNoteColor={this.updateNoteColor}
+          copy={this.copy}
+          paste={this.paste}
         />
       </div>
     );

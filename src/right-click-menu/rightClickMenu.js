@@ -57,7 +57,7 @@ class RightClickMenu extends React.Component{
 	selectColor(color){
 		var newColor = ColorChart[color];
 		this.props.updateNoteColor(this.state.note, newColor);
-	}
+    }
 
 	drawSubMenu(menu){
 		switch(menu){
@@ -99,7 +99,9 @@ class RightClickMenu extends React.Component{
 				onContextMenu={(e) => e.preventDefault()}>
 				<div className="optionsHolder">
 					<h3 className="menuitem" onClick={(e) => this.optionSelected(e, "colors")}>Color</h3>
-					<h3 className="menuitem">Font size</h3>
+                    <h3 className="menuitem">Font size</h3>
+                    <h3 className="menuitem" onClick={(e) => this.props.copy()}>Copy</h3>
+                    <h3 className="menuitem" onClick={(e) => this.props.paste()}>Paste</h3>
 				</div>
 				{this.drawSubMenu(this.state.selectedOption)}
 			</div>
