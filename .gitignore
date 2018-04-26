@@ -5,10 +5,11 @@
 
 # testing
 /coverage
-/testing tools
+/tools
 
 #secrets
 secrets.js
+backups/
 
 # build
 /build
@@ -20,6 +21,7 @@ src/resources/buttons.xcf
 .env.development.local
 .env.test.local
 .env.production.local
+.ebextensions
 
 npm-debug.log*
 yarn-debug.log*
