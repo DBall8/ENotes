@@ -38,6 +38,7 @@ class App extends React.Component {
         this.defaultColors = ColorChart.yellow;
         this.unsaved = false;
         this.username = '';
+        this.socketid = null;
 
         // object to hold info about the dragging note
         this.drag = {};
@@ -93,13 +94,15 @@ class App extends React.Component {
 
             // set up the socket for dynamic updating
             const socket = socketIOClient("http://130.215.249.227:8080");
+
+            socket.on("ready", (socketid) => {
+                this.socketid = socketid;
+            })
             
             socket.on("update", (body) => {
 
                 var input = JSON.parse(body);
-                console.log(body);
-                console.log(input);
-                
+
                 var newColors;
                 try {
                     newColors = JSON.parse(input.newColors);
@@ -112,9 +115,10 @@ class App extends React.Component {
                 }
 
                 var notes = { ...this.state.notes };
+                if (!notes[input.tag]) {
+                    return;
+                }
                 var note = notes[input.tag];
-                //var n = new note(input.newcontent, input.newx, input.newy, input.newW, input.newH, newColors);
-                //n.zindex = input.newZ;
                 
                 note.content = input.newcontent;
                 note.x = input.newx;
@@ -123,11 +127,40 @@ class App extends React.Component {
                 note.height = input.newH;
                 note.zindex = input.newZ;
                 note.Colors = newColors;
-                
-                //notes[input.tag] = n;
+
                 this.setState({ notes });
                 
 
+            })
+
+            socket.on("create", (body) => {
+                var input = JSON.parse(body);
+                
+                var colors;
+                try {
+                    colors = JSON.parse(input.colors);
+                }
+                catch (e) {
+                    console.error("Failed to parse colors json");
+                    console.error(e);
+                    console.error(input.colors);
+                    colors = {};
+                }
+
+                var n = new note(input.content, input.x, input.y, input.width, input.height, colors);
+                n.zindex = input.zindex;
+
+                var notes = { ...this.state.notes };
+                notes[input.tag] = n;
+                this.setState({ notes });
+                
+
+            })
+
+            socket.on("delete", (tag) => {
+                var notes = { ...this.state.notes };
+                delete notes[tag];
+                this.setState({ notes });
             })
             
             socket.emit("ready", this.username);
@@ -255,24 +288,25 @@ class App extends React.Component {
                 width: n.width,
                 height: n.height,
                 zindex: n.zindex,
-                colors: n.colors
+                colors: n.colors,
+                socketid: this.socketid
             })
         }).then((result) => {
             if(result.status !== 200){
-            console.error("ERROR: Server response: " + result.status)
-            console.error(result.statusText);
+                console.error("ERROR: Server response: " + result.status)
+                console.error(result.statusText);
             }
             else if (result.redirected) {
-            window.location.href = '/login';
+                window.location.href = '/login';
             }
             else{
-            return result.json();
+                return result.json();
 
             }
             return;
         }).then((res) =>{
             if(res.sessionExpired){
-            window.location.href = '/login';
+                window.location.href = '/login';
             }
 
         });
@@ -292,22 +326,23 @@ class App extends React.Component {
             method: "DELETE",
             credentials: 'same-origin',
             body: JSON.stringify({
-                tag: tag
+                tag: tag,
+                socketid: this.socketid
             })
         }).then((result) => {
             if(result.status !== 200){
-            console.error("ERROR: Server response: " + result.status)
-            console.error(result.statusText);
+                console.error("ERROR: Server response: " + result.status)
+                console.error(result.statusText);
             }
             else if (result.redirected) {
-            window.location.href = '/login';
+                window.location.href = '/login';
             }
             else{
-            return result.json();
+                return result.json();
             }
         }).then((res) =>{
             if(res.sessionExpired){
-            window.location.href = '/login';
+                window.location.href = '/login';
             }
         });
     }
@@ -328,23 +363,24 @@ class App extends React.Component {
                 newW: note.width,
                 newH: note.height,
                 newZ: note.zindex,
-                newColors: JSON.stringify(note.colors)
+                newColors: JSON.stringify(note.colors),
+                socketid: this.socketid
             })
         }).then((result) => {
             if(result.status !== 200){
-            console.error("ERROR: Server response: " + result.status)
-            console.error(result.statusText);
+                console.error("ERROR: Server response: " + result.status)
+                console.error(result.statusText);
             }
             else if (result.redirected) {
-            window.location.href = '/login';
+                window.location.href = '/login';
             }
             else{
-            return result.json();
+                return result.json();
   
             }
         }).then((res) =>{
             if(res.sessionExpired){
-            window.location.href = '/login';
+                window.location.href = '/login';
             }
             note.saved = true;
         });

@@ -146,6 +146,8 @@ var activeClients = {};
 // Set up sockets for updating active connections when data changes elsewhere
 io.on('connect', (socket) => {
     console.log("Connected to " + socket.id);
+    // tell the client its id
+    socket.emit("ready", socket.id);
 
     socket.on("ready", (username) => {
         activeClients[socket.id] = { username: username, socket: socket };
@@ -333,6 +335,14 @@ function addNote(req, res) {
     db.query('INSERT INTO notes VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)', values).then(() =>{
         // successful
         console.log(input.tag + " successfully added")
+
+        // notifty active connections that the note has been created
+        Object.keys(activeClients).map((key => {
+            if (activeClients[key].username == req.user && activeClients[key].socket.id != input.socketid) {
+                activeClients[key].socket.emit("create", req.body);
+            }
+        }))
+
         res.writeHead(200);
         var response = {
             successful: true,
@@ -357,7 +367,15 @@ function deleteNote(req, res){
         
 	// delete note from database
 	db.query("DELETE FROM notes WHERE key=$1 AND tag=$2", [key, input.tag]).then(() => {
-		console.log(input.tag + " successfully deleted")
+        console.log(input.tag + " successfully deleted")
+
+        // notifty active connections that the note has been deleted
+        Object.keys(activeClients).map((key => {
+            if (activeClients[key].username == req.user && activeClients[key].socket.id != input.socketid) {
+                activeClients[key].socket.emit("delete", input.tag);
+            }
+        }))
+
 		res.writeHead(200)
         var response = {
             successful: true,
@@ -386,7 +404,7 @@ function updateNote(req, res){
 
         // notifty active connections that the note has updated
         Object.keys(activeClients).map((key => {
-            if (activeClients[key].username == req.user) {
+            if (activeClients[key].username == req.user && activeClients[key].socket.id != input.socketid) {
                 activeClients[key].socket.emit("update", req.body);
             }
         }))
