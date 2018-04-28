@@ -2,7 +2,6 @@ import React from 'react';
 import { BrowserRouter, Switch, Route, Redirect } from 'react-router-dom';
 
 import App from './App';
-import NotePage from './note-page/NotePage';
 import Login from './login/Login';
 import Changelog from './changelog/changelog'
 
@@ -12,7 +11,7 @@ const Routes = (props) => (
             <Switch>
                 <Route path="/login" component={Login} />
                 <Route path="/changelog" component={Changelog} />
-                <Route path="/" component={NotePage} />
+                <Route path="/" component={App} />
                 <Redirect from="*" to="/" />
             </Switch>
             

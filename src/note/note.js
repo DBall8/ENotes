@@ -25,11 +25,6 @@ class Note extends React.Component{
 		this.props.deleteNote(this.props.tag);
 	}
 
-	updateNote(e){
-		this.props.note.content = this.contentArea.value;
-		this.props.updateNote(this.props.tag, this.contentArea.value)
-	}
-
 	select(e){
 		this.props.selectNote(this.props.tag);
 	}
@@ -44,10 +39,8 @@ class Note extends React.Component{
         this.props.resizeStart(this.props.tag, e.screenX, e.screenY);
     }
 
-	inputEvent(e){
-		this.props.note.content = this.contentArea.value;
-		this.props.note.saved = false;
-		this.props.markUnsaved();
+    inputEvent(e) {
+        this.props.changeNoteText(this.props.tag, e.target.value)
 	}
 
 	keyInput(e){
@@ -145,8 +138,9 @@ class Note extends React.Component{
                     <textarea className="noteContent" 
                         spellCheck="false"
 						ref={(input) => this.contentArea = input}
-						defaultValue={this.props.note.content}
-						onBlur={(e) => this.updateNote(e)} 
+						value={this.props.note.content}
+						//onBlur={(e) => this.updateNote(e)} 
+                        //onChange={(e) => this.onInput(e)}
                         onInput={(e) => this.inputEvent(e)}
                         onKeyDown={(e) => this.keyInput(e)} />
                     

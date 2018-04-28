@@ -37,6 +37,8 @@ var options = {
 */
 
 var app = express();
+var server = http.createServer(app);
+var io = require('socket.io')(server);
 
 var secretStr = process.env.SECRET_STR ? process.env.SECRET_STR : "kuayborn98uno9y8vor8yaionvol ya";
 app.use(sessions({
@@ -46,7 +48,7 @@ app.use(sessions({
     activeDuration: 3 * 24 * 60 * 60 * 1000,
 }));
 
-app.use(rHTTPS([/localhost:(\d{4})/], [/\/insecure/]));
+//app.use(rHTTPS([/localhost:(\d{4})/], [/\/insecure/]));
 
 app.use((req, res, next) => {
 
@@ -139,9 +141,29 @@ app.all("*", (req, res, next) => {
     }
 })
 
+var activeClients = {};
+
+// Set up sockets for updating active connections when data changes elsewhere
+io.on('connect', (socket) => {
+    console.log("Connected to " + socket.id);
+
+    socket.on("ready", (username) => {
+        activeClients[socket.id] = { username: username, socket: socket };
+        console.log(username + " is ready");
+    })
+
+    socket.on('disconnect', () => {
+        console.log(socket.id + " disconnected.");
+        if (activeClients[socket.id]) {
+            delete activeClients[socket.id]
+            console.log(activeClients)
+        }
+    })
+})
+
 
 // start the server
-app.listen(port, () => {
+server.listen(port, () => {
     console.log('Listening on :' + port);
 });
 
@@ -360,7 +382,16 @@ function updateNote(req, res){
 
 	// update contents of the note
     var arr = [input.newcontent, input.newx, input.newy, input.newW, input.newH, input.newZ, input.newColors, key, input.tag]
-	db.query("UPDATE notes SET content=$1, x=$2, y=$3, width=$4, height=$5, zindex=$6, colors=$7 WHERE key=$8 AND tag=$9", arr).then(() =>{
+    db.query("UPDATE notes SET content=$1, x=$2, y=$3, width=$4, height=$5, zindex=$6, colors=$7 WHERE key=$8 AND tag=$9", arr).then(() => {
+
+        // notifty active connections that the note has updated
+        Object.keys(activeClients).map((key => {
+            if (activeClients[key].username == req.user) {
+                activeClients[key].socket.emit("update", req.body);
+            }
+        }))
+        
+
 		res.writeHead(200)
         var response = {
             successful: true,
