@@ -1,14 +1,10 @@
 import React from 'react';
 import socketIOClient from "socket.io-client";
 
-import Note from './note/note';
+import NotePage from './NotePage/NotePage';
 import note from './note/note-class';
-import RightClickMenu from './right-click-menu/rightClickMenu';
-import OptionsMenu from './options-menu/optionsMenu';
 import './App.css';
 import ColorChart from './resources/colorChart';
-import refreshIm from './resources/refresh-icon.png'
-import gearIm from './resources/gear.png'
 
 class App extends React.Component {
 
@@ -19,38 +15,27 @@ class App extends React.Component {
         this.addNote = this.addNote.bind(this);
         this.deleteNote = this.deleteNote.bind(this);
         this.updateNote = this.updateNote.bind(this);
-        this.selectNote = this.selectNote.bind(this);
-        this.dragStart = this.dragStart.bind(this);
-        this.resizeStart = this.resizeStart.bind(this);
-        this.changeNoteText = this.changeNoteText.bind(this);
-        this.updateNoteColor = this.updateNoteColor.bind(this);
         this.logout = this.logout.bind(this);
-        this.copy = this.copy.bind(this);
-        this.saveToMyClipboard = this.saveToMyClipboard.bind(this);
-        this.retrieveFromMyClipboard = this.retrieveFromMyClipboard.bind(this);
-        this.paste = this.paste.bind(this);
+        this.changeNoteText = this.changeNoteText.bind(this);
+        this.changeNotePosition = this.changeNotePosition.bind(this);
+        this.changeNoteSize = this.changeNoteSize.bind(this);
+        this.changeNoteColor = this.changeNoteColor.bind(this);
+        this.selectNote = this.selectNote.bind(this);
 
         // watch the state of each note
         this.state = {
             notes: {}
         }
 
-        this.defaultColors = ColorChart.yellow;
-        this.unsaved = false;
         this.username = '';
         this.socketid = null;
-
-        // object to hold info about the dragging note
-        this.drag = {};
-        this.resize = {};
-
     }
 
     // STATE MANAGEMENT FUNCTIONS
     setNoteState(notes){
         this.setState((prevstate) => {
             return {
-            notes: notes
+                notes: notes
             }
         })
     }
@@ -58,36 +43,6 @@ class App extends React.Component {
     // LIFE CYCLE FUNCTIONS
 
     componentWillMount(){
-
-        window.addEventListener('click', (event) => {
-            var rightClick = false;
-            if("which" in event){
-                //console.log("WHICH: " + e.which);
-                rightClick = event.which == 3;
-            }
-            if("button" in event){
-                //console.log("BUTTON: " + e.button);
-                rightClick = event.button == 2;
-            }
-
-            if(!rightClick && this.rightClickMenu && this.rightClickMenu.state.display === 'block'){
-                this.rightClickMenu.hide();
-            }
-
-            if (!rightClick && this.optionsMenu && this.optionsMenu.state.display === 'block') {
-                this.optionsMenu.toggleDisplay();
-            }
-        
-        })
-        window.addEventListener('mouseup', (event) => {
-            this.dragEnd(event)
-            this.resizeEnd(event)
-
-        }); // listen for drag ends
-        window.addEventListener('mousemove', (event) => {
-            this.dragDuring(event)
-            this.resizeDuring(event)
-        }); // listen for drag movements
 
         // load notes from DB
         this.getNotes().then(() => {
@@ -108,9 +63,6 @@ class App extends React.Component {
                     newColors = JSON.parse(input.newColors);
                 }
                 catch (e) {
-                    console.error("Failed to parse colors json");
-                    console.error(e);
-                    console.error(input.colors);
                     newColors = {};
                 }
 
@@ -141,9 +93,6 @@ class App extends React.Component {
                     colors = JSON.parse(input.colors);
                 }
                 catch (e) {
-                    console.error("Failed to parse colors json");
-                    console.error(e);
-                    console.error(input.colors);
                     colors = {};
                 }
 
@@ -169,24 +118,6 @@ class App extends React.Component {
     }
 
     componentDidMount() {
-
-        this.notes = {};
-        this.clipboard = '';
-
-        window.setInterval(() => {
-            if(this.unsaved){
-            this.unsaved = false;
-            var notes = {...this.state.notes}
-            Object.keys(this.state.notes).map((t) =>{
-                if(!notes[t].saved){
-                this.updateNote(t);
-                }
-                return;
-            })
-
-            }
-      
-        }, 1000)
     }
 
     // DATA MANAGEMENT FUNCTIONS
@@ -397,107 +328,56 @@ class App extends React.Component {
 
     }
 
-    updateNoteColor(tag, newcolor){
-        var notes = {...this.state.notes};
+    changeNotePosition(tag, x, y) {
+        const notes = { ...this.state.notes }
+        var note = notes[tag];
+        note.x = x;
+        note.y = y;
+        this.setState({ notes });
+    }
+
+    changeNoteSize(tag, w, h) {
+        const notes = { ...this.state.notes }
+        var note = notes[tag];
+        note.width = w;
+        note.height = h;
+        this.setState({ notes });
+    }
+    
+    changeNoteColor(tag, newcolor) {
+        var notes = { ...this.state.notes };
         notes[tag].colors = newcolor;
-        this.setState({notes: notes}, () => {
+        this.setState({ notes: notes }, () => {
             this.updateNote(tag)
         });
     }
 
     // Select a note
-    selectNote(tag){
+    selectNote(tag) {
         // if already selected, done
-        if(this.state.notes[tag].selected){
+        if (this.state.notes[tag].selected) {
             return;
         }
 
         // go through each note, deselecting it and moving it back 1
         // or if it is the note to select, select it and bring it to front
-        var notes = {...this.state.notes};
+        var notes = this.state.notes;
         Object.keys(notes).map((k) => {
-            if(k === tag){
-            notes[k].selected = true;
-            notes[k].zindex = 9999;
+            if (k === tag) {
+                notes[k].selected = true;
+                notes[k].zindex = 9999;
             }
-            else{
-            notes[k].selected = false;
-            if(notes[k].zindex > 0){
-                notes[k].zindex--;
-            }
-        
+            else {
+                notes[k].selected = false;
+                if (notes[k].zindex > 0) {
+                    notes[k].zindex--;
+                }
+
             }
             return;
         })
         // update state
-        this.setNoteState(notes);
-    }
-
-    // start dragging a note
-    dragStart(tag, x, y){
-        // save the offset from the corner of the note, so when dragging the note will move with the cursor
-        var note = this.state.notes[tag];
-        this.drag = { tag: tag, offsetX: x - note.x, offsetY: y - note.y}
-    }
-
-
-    // Move a note to the cursor when the cursor is moved and a note is being dragged
-    dragDuring(e){
-        // quit now if nothing is being dragged
-        if(!this.drag.tag){
-            return;
-        }
-        // grab the note
-        const notes = {...this.state.notes}
-        var note = notes[this.drag.tag];
-
-        // move note to the cursor minue the offset
-        note.x = e.screenX - this.drag.offsetX;
-        note.y = e.screenY - this.drag.offsetY;
-        // update state
-        this.setNoteState(notes);
-    }
-
-    // stops a dragging note
-    dragEnd(e){
-        if(!this.drag.tag){
-            return;
-        }
-
-        this.updateNote(this.drag.tag)
-        this.drag = {};
-    }
-
-    resizeStart(tag, x, y) {
-        // save the offset from the corner of the note, so when dragging the note will move with the cursor
-        this.resize = { tag: tag, startX: x, startY: y }
-    }
-
-    resizeDuring(e) {
-        // quit now if nothing is being dragged
-        if (!this.resize.tag) {
-            return;
-        }
-        // grab the note
-        const notes = { ...this.state.notes }
-        var note = notes[this.resize.tag];
-
-        // move note to the cursor minue the offset
-        note.width += e.screenX - this.resize.startX;
-        this.resize.startX = e.screenX;
-        note.height += e.screenY - this.resize.startY;
-        this.resize.startY = e.screenY;
-        // update state
-        this.setNoteState(notes);
-    }
-
-    resizeEnd(e) {
-        if (!this.resize.tag) {
-            return;
-        }
-
-        this.updateNote(this.resize.tag)
-        this.resize = {};
+        this.setState({ notes });
     }
 
     logout(){
@@ -516,88 +396,24 @@ class App extends React.Component {
         });
     }
 
-    toggleOptions(e) {
-        e.stopPropagation()
-        this.optionsMenu.toggleDisplay();
-    }
-
-    copy() {
-        Object.keys(this.state.notes).map((t) => {
-            var n = this.state.notes[t]
-            if (n.selected) {
-                this.notes[t].copy();
-            }
-        })
-    }
-
-    paste() {
-        Object.keys(this.state.notes).map((t) => {
-            var n = this.state.notes[t]
-            if (n.selected) {
-                this.notes[t].paste();
-            }
-        })
-    }
-
-    saveToMyClipboard(val) {
-        this.clipboard = val;
-    }
-
-    retrieveFromMyClipboard() {
-        console.log(this.clipboard)
-        return this.clipboard;
-    }
-
-    refresh() {
-        this.setState({
-            notes: {}
-        });
-
-        this.getNotes();
-    }
 
     // draws the App
     render() {
         return (
-            <div className="App" >
-                <h1 className="title"><span className="welcomeMessage">Welcome {this.username}!</span>
-                    <div className="rightFloat optionsContainer">
-                        <input type="image" src={refreshIm} className="mainPageButton button" onClick={(e) => this.refresh()} />
-                        <input type="image" src={gearIm} className="mainPageButton button" onClick={(e) => this.toggleOptions(e)} />
-                        <OptionsMenu
-                            ref={(input) => this.optionsMenu = input}
-                            logout={this.logout}
-                        />
-                    </div>
-
-                </h1>
-            { Object.keys(this.state.notes).map((key) =>
-                <Note
-                ref={(input) => this.notes[key] = input}
-                key={key}
-                tag={key}
-                note={this.state.notes[key]}
+            <NotePage
+                notes={this.state.notes}
+                username={this.username}
                 addNote={this.addNote}
                 deleteNote={this.deleteNote}
                 updateNote={this.updateNote}
-                selectNote={this.selectNote}
-                dragStart={this.dragStart}
-                resizeStart={this.resizeStart}
+                setNoteState={this.setNoteState}
+                logout={this.logout}
                 changeNoteText={this.changeNoteText}
-                saveToMyClipboard={this.saveToMyClipboard}
-                retrieveFromMyClipboard={this.retrieveFromMyClipboard}
-
-                launchOptions={this.rightClickMenu.show}
-                />  
-            )
-            }
-            <RightClickMenu 
-                ref={(input) => this.rightClickMenu = input}
-                updateNoteColor={this.updateNoteColor}
-                copy={this.copy}
-                paste={this.paste}
+                changeNotePosition={this.changeNotePosition}
+                changeNoteSize={this.changeNoteSize}
+                changeNoteColor={this.changeNoteColor}
+                selectNote={this.selectNote}
             />
-            </div>
         );
     }
 }

@@ -7,7 +7,7 @@
     margin: 0;
     cursor: default;
     overflow: visible;
-    left: 20px;
+    left: -100px;
     border: 2px solid black;
 }
 
