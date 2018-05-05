@@ -56,7 +56,7 @@ class RightClickMenu extends React.Component{
 
 	selectColor(color){
 		var newColor = ColorChart[color];
-		this.props.updateNoteColor(this.state.note, newColor);
+		this.props.changeNoteColor(this.state.note, newColor);
     }
 
 	drawSubMenu(menu){

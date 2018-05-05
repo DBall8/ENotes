@@ -215,7 +215,7 @@ class NotePage extends React.Component{
                 }
                 <RightClickMenu
                     ref={(input) => this.rightClickMenu = input}
-                    updateNoteColor={this.props.updateNoteColor}
+                    changeNoteColor={this.props.changeNoteColor}
                     copy={this.copy}
                     paste={this.paste}
                 />

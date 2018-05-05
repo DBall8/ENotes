@@ -48,7 +48,8 @@ class App extends React.Component {
         this.getNotes().then(() => {
 
             // set up the socket for dynamic updating
-            const socket = socketIOClient("https://enotes.site", { secure: true });
+            //const socket = socketIOClient("https://enotes.site", { secure: true });
+            const socket = socketIOClient("192.168.1.16:8080", { secure: true });
 
             socket.on("ready", (socketid) => {
                 this.socketid = socketid;
