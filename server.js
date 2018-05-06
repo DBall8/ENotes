@@ -11,6 +11,7 @@ var http = require('http')
 	, port = process.env.PORT || 8080
 
 
+// Use environment database URL, or get a local URL if process environment isnt present
 if (process.env.DATABASE_URL){
 	var dbURL = process.env.DATABASE_URL;
 }
@@ -21,8 +22,8 @@ else {
 // open the database
 var db = new pg.Client(dbURL);
 db.connect().then(() => {
-	db.query('CREATE TABLE IF NOT EXISTS users (username VARCHAR(252), hash VARCHAR(252), salt VARCHAR(252), key VARCHAR(252))');
-	db.query('CREATE TABLE IF NOT EXISTS notes (key VARCHAR(252), tag VARCHAR(252), content VARCHAR(4096), x INTEGER, y INTEGER, width INTEGER, height INTEGER, zindex INTEGER, colors VARCHAR(512))')
+    db.query('CREATE TABLE IF NOT EXISTS users (username VARCHAR(252), hash VARCHAR(252), salt VARCHAR(252), key VARCHAR(252) PRIMARY KEY)');
+    db.query('CREATE TABLE IF NOT EXISTS notes (key VARCHAR(252) REFERENCES users(key), tag VARCHAR(252), content VARCHAR(4096), x INTEGER, y INTEGER, width INTEGER, height INTEGER, zindex INTEGER, colors VARCHAR(512))')
 	console.log("Successfully connected to database.");
 }, (err) =>{
 	console.error("Failed to connect to database.")
@@ -36,20 +37,24 @@ var options = {
 };
 */
 
+// create the server
 var app = express();
 var server = http.createServer(app);
 var io = require('socket.io')(server);
 
+// set up sessions
 var secretStr = process.env.SECRET_STR ? process.env.SECRET_STR : "kuayborn98uno9y8vor8yaionvol ya";
 app.use(sessions({
     cookieName: 'session',
     secret: secretStr,
-    duration: 3 * 24 * 60 * 60 * 1000,
-    activeDuration: 3 * 24 * 60 * 60 * 1000,
+    duration: 3 * 24 * 60 * 60 * 1000, // 3 days
+    activeDuration: 3 * 24 * 60 * 60 * 1000, // 3 days
 }));
 
+// force the use of https
 //app.use(rHTTPS([/localhost:(\d{4})/], [/\/insecure/]));
 
+// read the body of any http messages into req.body
 app.use((req, res, next) => {
 
     var data = '';
@@ -60,6 +65,7 @@ app.use((req, res, next) => {
     });
 })
 
+// read the session information of each message
 app.use((req, res, next) => {
     if (req.session && req.session.username && req.session.key) {
         req.user = req.session.username;
@@ -68,6 +74,7 @@ app.use((req, res, next) => {
     next();
 })
 
+// redirect to login page if the user is not logged in
 function requireLogin(req, res, next) {
     if (!req.user) {
     	if(req.method == 'GET' && req.url == '/'){
@@ -84,6 +91,7 @@ function requireLogin(req, res, next) {
     }
 }
 
+// Set up a bunch of http path responses
 app.get('/', requireLogin, (req, res) => {
     sendFile(res, './build/index.html');
 })
@@ -91,7 +99,6 @@ app.get('/', requireLogin, (req, res) => {
 app.get('/login', (req, res) => {
     sendFile(res, './build/index.html');
 })
-
 
 app.get('/api', requireLogin, (req, res) => {
     getNotes(req, res);
@@ -121,6 +128,7 @@ app.post('/newuser', (req, res) => {
     createNewUser(req, res);
 })
 
+// default to sending files from the build directory
 app.all("*", (req, res, next) => {
 
     var uri = url.parse(req.url)
@@ -141,24 +149,24 @@ app.all("*", (req, res, next) => {
     }
 })
 
+// list of actively connected sockets
 var activeClients = {};
 
 // Set up sockets for updating active connections when data changes elsewhere
 io.on('connect', (socket) => {
-    console.log("Connected to " + socket.id);
+
     // tell the client its id
     socket.emit("ready", socket.id);
 
+    // add a client to the list of connected clients
     socket.on("ready", (username) => {
         activeClients[socket.id] = { username: username, socket: socket };
-        console.log(username + " is ready");
     })
 
+    // remove a client from the list of connected clients when they disconnect
     socket.on('disconnect', () => {
-        console.log(socket.id + " disconnected.");
         if (activeClients[socket.id]) {
             delete activeClients[socket.id]
-            console.log(activeClients)
         }
     })
 })
@@ -169,6 +177,9 @@ server.listen(port, () => {
     console.log('Listening on :' + port);
 });
 
+// Logs in a user
+// INPUT - req - HTTP request object
+// INPUT - res - HTTP response object
 function login(req, res) {
 
     // convert to json
@@ -177,7 +188,7 @@ function login(req, res) {
 	// search the users table of the database to see if the username is present
 	var key = ''; // replace with a key if a username and password match a saved user 
 
-	// (should only be called once)
+	// (should only be called once, maybe add Limit 1?) TODO
 	db.query("SELECT * FROM users WHERE username=$1", [input.username], function(err, resp){
 		if(err){
 			console.error("ERROR: could not access usernames\n" + err);
@@ -221,9 +232,11 @@ function login(req, res) {
 }
 
 // logs the user sessionID out
+// INPUT - req - HTTP request object
+// INPUT - res - HTTP response object
 function logout(req, res) {
 
-	// get the sessionID in the request
+	// reset the session
     req.session.reset();
 	// send response
 	res.end();
@@ -231,6 +244,8 @@ function logout(req, res) {
 
 
 // add a new user to the database
+// INPUT - req - HTTP request object
+// INPUT - res - HTTP response object
 function createNewUser(req, res){
 	var input = JSON.parse(req.body);
 
@@ -259,6 +274,10 @@ function createNewUser(req, res){
 }
 
 // create a new user and send a response
+// INPUT - username - the name of the user to create
+// INPUT - password - the password to use for the new user
+// INPUT - req - HTTP request object
+// INPUT - res - HTTP response object
 function newUser(username, password, req, res){
 
 	// generate a 128 byte salt
@@ -291,6 +310,7 @@ function newUser(username, password, req, res){
 	});
 }
 
+// TODO - remove these two functions and just use the username as the primary key in the database
 
 // generates a unique key for each user for using to access that user's database
 // A different database might be good to make this more efficient
@@ -322,6 +342,8 @@ function getNewKey(res, rej){
 }
 
 // add a note to the database
+// INPUT - req - HTTP request object
+// INPUT - res - HTTP response object
 function addNote(req, res) {
 
 	var input = JSON.parse(req.body);
@@ -359,6 +381,8 @@ function addNote(req, res) {
 }
 
 // delete a note from the database
+// INPUT - req - HTTP request object
+// INPUT - res - HTTP response object
 function deleteNote(req, res){
 	var input = JSON.parse(req.body);
 
@@ -392,6 +416,8 @@ function deleteNote(req, res){
 
 
 // update a note in the database
+// INPUT - req - HTTP request object
+// INPUT - res - HTTP response object
 function updateNote(req, res){
 	var input = JSON.parse(req.body);
 
@@ -424,6 +450,8 @@ function updateNote(req, res){
 }
 
 // send all the notes stored for a user
+// INPUT - req - HTTP request object
+// INPUT - res - HTTP response object
 function getNotes(req, res) {
     var uri = url.parse(req.url)
 	// read query sessionID
@@ -449,6 +477,9 @@ function getNotes(req, res) {
 
 
 // send a file
+// INPUT - res - HTTP response object
+// INPUT - filename - the name of the file to open and send
+// INPUT - type - the type of the file (text/html if not given) to be sent
 function sendFile(res, filename, type) {
     type = type || 'text/html'
     fs.readFile(filename, function (error, content) {
