@@ -64,6 +64,8 @@ class App extends React.Component {
                     newColors = JSON.parse(input.newColors);
                 }
                 catch (e) {
+                    console.log("Could not convert colors.");
+                    console.log(input.newColors);
                     newColors = {};
                 }
 
@@ -79,7 +81,7 @@ class App extends React.Component {
                 note.width = input.newW;
                 note.height = input.newH;
                 note.zindex = input.newZ;
-                note.Colors = newColors;
+                note.colors = newColors;
 
                 this.setState({ notes });
                 
