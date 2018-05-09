@@ -1,3 +1,7 @@
+/* optionsMenu.js
+* Class for creating a list of options that can be clicked on.
+*/
+
 import React from 'react';
 
 import './optionsMenu.css';
@@ -8,11 +12,13 @@ class OptionsMenu extends React.Component {
 
         this.toggleDisplay = this.toggleDisplay.bind(this);
 
+        // The state simply holds the menu's display css
         this.state = {
             display: 'none'
         }
     }
 
+    // Hides and shows the menu
     toggleDisplay() {
         if (this.state.display === 'none') {
             this.setState({
@@ -26,6 +32,7 @@ class OptionsMenu extends React.Component {
         }
     }
 
+    // Displays the menu
     render() {
         return (
             <div className="optionsmenu" style={{

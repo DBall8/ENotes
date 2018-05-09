@@ -1,3 +1,7 @@
+/* App.js
+* Main file for managing data throughout the application
+*/
+
 import React from 'react';
 import socketIOClient from "socket.io-client";
 
@@ -22,16 +26,17 @@ class App extends React.Component {
         this.changeNoteColor = this.changeNoteColor.bind(this);
         this.selectNote = this.selectNote.bind(this);
 
-        // watch the state of each note
+        // the state is the list of all notes for the logged in user
         this.state = {
             notes: {}
         }
 
+        // track the user's name and the id of their socket
         this.username = '';
         this.socketid = null;
     }
 
-    // STATE MANAGEMENT FUNCTIONS
+    // function for changing state, not needed now but could be used if I decided the state should store more
     setNoteState(notes){
         this.setState((prevstate) => {
             return {
@@ -42,39 +47,43 @@ class App extends React.Component {
 
     // LIFE CYCLE FUNCTIONS
 
+    // Before the app loads
     componentWillMount(){
 
         // load notes from DB
         this.getNotes().then(() => {
 
             // set up the socket for dynamic updating
-            //const socket = socketIOClient("https://enotes.site", { secure: true });
-            const socket = socketIOClient("130.215.249.227:8080", { secure: true });
+            //const socket = socketIOClient("https://enotes.site", { secure: true }); // FOR LIVE
+            const socket = socketIOClient("130.215.249.227:8080", { secure: true }); // FOR DEV (insert the IP of the host computer)
 
+            // store the socket id (received from server)
             socket.on("ready", (socketid) => {
                 this.socketid = socketid;
             })
-            
+
+            // Update an existing note that has been changed elsewhere
             socket.on("update", (body) => {
 
                 var input = JSON.parse(body);
 
+                // attempt to parse colors json
                 var newColors;
                 try {
                     newColors = JSON.parse(input.newColors);
                 }
                 catch (e) {
-                    console.log("Could not convert colors.");
-                    console.log(input.newColors);
-                    newColors = {};
+                    newColors = {}; // default to empty
                 }
 
+                // check the note does exist
                 var notes = { ...this.state.notes };
                 if (!notes[input.tag]) {
                     return;
                 }
                 var note = notes[input.tag];
-                
+
+                // update the note
                 note.content = input.newcontent;
                 note.x = input.newx;
                 note.y = input.newy;
@@ -83,38 +92,41 @@ class App extends React.Component {
                 note.zindex = input.newZ;
                 note.colors = newColors;
 
+                // update state
                 this.setState({ notes });
-                
-
             })
 
+            // Create a note locally that was created elsewhere
             socket.on("create", (body) => {
                 var input = JSON.parse(body);
-                
+                // attempt to parse colors json
                 var colors;
                 try {
                     colors = JSON.parse(input.colors);
                 }
                 catch (e) {
-                    colors = {};
+                    colors = {}; // use empty default
                 }
 
+                // create the new note
                 var n = new note(input.content, input.x, input.y, input.width, input.height, colors);
                 n.zindex = input.zindex;
 
+                // add the new node
                 var notes = { ...this.state.notes };
                 notes[input.tag] = n;
                 this.setState({ notes });
-                
-
             })
 
+            // Delete a note locally that was deleted elsewhere
             socket.on("delete", (tag) => {
+                // remove the note
                 var notes = { ...this.state.notes };
                 delete notes[tag];
                 this.setState({ notes });
             })
-            
+
+            // let the server know that this user's socket is ready
             socket.emit("ready", this.username);
 
         });
@@ -123,32 +135,39 @@ class App extends React.Component {
     componentDidMount() {
     }
 
-    // DATA MANAGEMENT FUNCTIONS
+    // DATA MANAGEMENT FUNCTIONS - notifies the server of changes so that the server can update the database
 
-    // ask server for notes
+    // Request all notes for the logged in user from the server
     getNotes(){
-    // fetch from /api
-        //* FETCH
+        // fetch from /api
         return fetch("/api", {
             method: "GET",
             credentials: 'same-origin'
         })
+        // Handle http response
         .then((res) => {
+            // Handle error responses
             if (res.status !== 200) {
                 console.error(res);
                 return null;
             }
+            // Handle a redirect (back to login page)
             else if (res.redirected) {
                 window.location.href = '/login';
             }
+            // Success, handle the request body as json
             else{ return res.json()}
         }) 
+        // Handle the response body
         .then((data) => {
+            // If the session has expired, redirect to login page
             if(data.sessionExpired){
                 window.location.href = "/login";
             }
+            // Store the user's name
             this.username = data.username;
-            this.loadNotes(data.notes); // load note
+            // pass the data to the load notes function
+            this.loadNotes(data.notes);
             // if no notes were loaded, create a new one
             if (Object.keys(this.state.notes).length <= 0) {
                 this.addNote(100, 100);
@@ -156,15 +175,18 @@ class App extends React.Component {
         });
     }
 
-    // load notes from an array of objects
+    // Loads a list of JSONs representing notes into the App's state
+    // INPUT - data - a list of JSON objects representing notes
     loadNotes(data){
 
-        // start building new notes object for the state
+        // New notes object for the state
         var notes = {}
 
         // add a new note class for each object
         data.map((anote) => {
             // build note class
+
+            // parse colors into a json
             var colors;
             try{
                 colors = JSON.parse(anote.colors);
@@ -173,11 +195,13 @@ class App extends React.Component {
                 console.error("Failed to parse colors json");
                 console.error(e);
                 console.error(anote.colors);
-                colors = {};
+                colors = {}; // default to empty (handled as default)
             }
 
+            // Make new class instance
             var n = new note(anote.content, anote.x, anote.y, anote.width, anote.height, colors);
             n.zindex = anote.zindex;
+
             // insert to notes
             notes[anote.tag] = n;
             return;
@@ -188,6 +212,8 @@ class App extends React.Component {
     }
 
     // Adds a new note
+    // INPUT - x - the x coordinate to add the note at
+    // INPUT - y - the y coordinate to add the note at
     addNote(x, y) {
         // build empty note
         var n = new note('', x, y, 300, 200, JSON.stringify(this.defaultColors));
@@ -204,13 +230,12 @@ class App extends React.Component {
             return;
         })
 
-        // add to state with time since epoch as a tag
+        // add to state with time stamp as a tag
         var t = `note-${Date.now()}`
         notes[t] = n;
         this.setNoteState(notes);
 
-            //* FETCH
-        // update DB
+        // Notify the server about the new note
         fetch("/api", {
             method: "POST",
             credentials: 'same-origin',
@@ -226,19 +251,22 @@ class App extends React.Component {
                 socketid: this.socketid
             })
         }).then((result) => {
+            // Handle http error response
             if(result.status !== 200){
                 console.error("ERROR: Server response: " + result.status)
                 console.error(result.statusText);
             }
+            // Handle a redirect to login page
             else if (result.redirected) {
                 window.location.href = '/login';
             }
+            // Request successfull, continute with the body of the response as a JSON
             else{
                 return result.json();
-
             }
             return;
-        }).then((res) =>{
+        }).then((res) => {
+            // Check if the session has expired, redirect to login page if so
             if(res.sessionExpired){
                 window.location.href = '/login';
             }
@@ -247,15 +275,17 @@ class App extends React.Component {
     
     }
 
-    // delete a note
-    deleteNote(tag){
+    // Delete a note
+    // INPUT - tag - the tag of the note to delete
+    deleteNote(tag) {
+
+        // Delete the note locally
         var notes = {...this.state.notes}
         notes[tag] = null;
         delete(notes[tag]);
         this.setNoteState(notes);
 
-        // update DB
-            //* FETCH
+        // Tell the server which note to remove, all thats needed is its tag
         fetch("/api", {
             method: "DELETE",
             credentials: 'same-origin',
@@ -264,28 +294,39 @@ class App extends React.Component {
                 socketid: this.socketid
             })
         }).then((result) => {
+            // Handle error response
             if(result.status !== 200){
                 console.error("ERROR: Server response: " + result.status)
                 console.error(result.statusText);
             }
+            // Handle a redirect to login page
             else if (result.redirected) {
                 window.location.href = '/login';
             }
+            // Delete request successful, continue with body of the response as a JSON
             else{
                 return result.json();
             }
-        }).then((res) =>{
+        }).then((res) => {
+            // If session has expired, redirect to login page
             if(res.sessionExpired){
                 window.location.href = '/login';
             }
         });
     }
 
+    // Notify the server about a change to a note (change must already have been made locally to the state)
+    // INPUT - tag - the tag of the note to update the server about
     updateNote(tag) {
         var notes = { ...this.state.notes };
         var note = notes[tag];
 
-        // update DB
+        // Update successfull so mark the note as saved 
+        // (Didnt want to wait for success response in to avoid whiping a new state change that happens before the http response)
+        note.saved = true;
+        this.setState({ notes });
+
+        // Tell the server everything about the current state of the note
         fetch("/api", {
             method: "PUT",
             credentials: 'same-origin',
@@ -301,60 +342,90 @@ class App extends React.Component {
                 socketid: this.socketid
             })
         }).then((result) => {
+            // Handle http error
             if(result.status !== 200){
                 console.error("ERROR: Server response: " + result.status)
                 console.error(result.statusText);
             }
+            // Handle a redirect to login page
             else if (result.redirected) {
                 window.location.href = '/login';
             }
+            // Success, ready response body as JSON
             else{
                 return result.json();
   
             }
-        }).then((res) =>{
+        }).then((res) => {
+            // Check if session expired and redirect to login page if it did
             if(res.sessionExpired){
                 window.location.href = '/login';
             }
-            note.saved = true;
         });
 
     }
 
+    // FUNCTIONS FOR CHANGING NOTES - changes notes in the state without necessarily notifying the server
+
+    // Change the text on a note
+    // INPUT - tag - the tag of the note to change
+    // INPUT - content - the new text content of the note
     changeNoteText(tag, content) {
+        // get note
         var notes = { ...this.state.notes };
         var note = notes[tag];
+        // change note, marking it as changed
         note.content = content;
         note.saved = false;
+        // update state
         this.setState({ notes });
-
     }
 
+    // Change the position of a note
+    // INPUT - tag - the tag of the note to change
+    // INPUT - x - the new x coordinate of the note
+    // INPUT - y - the new y coordinate of the note
     changeNotePosition(tag, x, y) {
+        // get the note
         const notes = { ...this.state.notes }
         var note = notes[tag];
+        // change the note
         note.x = x;
         note.y = y;
+        // update state
         this.setState({ notes });
     }
 
+    // Change the size of a note
+    // INPUT - tag - the tag of the note to change
+    // INPUT - w - the new width of the note
+    // INPUT - h - the new height of the note
     changeNoteSize(tag, w, h) {
+        // get the note
         const notes = { ...this.state.notes }
         var note = notes[tag];
+        // change the note
         note.width = w;
         note.height = h;
+        // update the state
         this.setState({ notes });
     }
-    
+
+    // Change the color of a note
+    // INPUT - tag - the tag of the note to change
+    // INPUT - newcolor - a json representing the new color of the note
     changeNoteColor(tag, newcolor) {
+        // get the note and set its new color
         var notes = { ...this.state.notes };
         notes[tag].colors = newcolor;
+        // update state and then update the server after its finished
         this.setState({ notes: notes }, () => {
             this.updateNote(tag)
         });
     }
 
-    // Select a note
+    // Make a note selected
+    // INPUT - tag - the tag of the note to select
     selectNote(tag) {
         // if already selected, done
         if (this.state.notes[tag].selected) {
@@ -382,24 +453,28 @@ class App extends React.Component {
         this.setState({ notes });
     }
 
+    // Logs out the user
     logout(){
-
+        // Send a request to /logout so the server can remove the user's session
         fetch("/logout", {
             method: "POST",
             credentials: 'same-origin'
         }).then((result) => {
+            // Handle http error
             if(result.status !== 200){
-            console.error("ERROR: Server response: " + result.status)
-            console.error(result.statusText);
+                console.error("ERROR: Server response: " + result.status)
+                console.error(result.statusText);
             }
             else {
+                // successful so redirect to login
                 window.location.href = "/login";
             }
         });
     }
 
 
-    // draws the App
+    // Draws the App
+    // Essentially just loads the NotePage class which can use this class's methods to manipulate the data
     render() {
         return (
             <NotePage

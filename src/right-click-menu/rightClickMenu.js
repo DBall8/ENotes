@@ -1,3 +1,8 @@
+/* richtClickMenu.js
+* Class for displaying a menu like a regular right click menu,
+* but with custom options for the application
+*/
+
 import React from 'react';
 
 import './rightClickMenu.css';
@@ -12,6 +17,12 @@ class RightClickMenu extends React.Component{
 		this.hide = this.hide.bind(this);
 		this.show = this.show.bind(this);
 
+        // (might move some of these out of the state)
+        // note: the tag of the note that was right clicked
+        // display: the css for displaying the menu
+        // x: the x coord of the menu
+        // y: the y coord of the menu
+        // selectedOption: the sub menu that is currently open (null for none)
 		this.state = {
 			note: '',
 			display: 'none',
@@ -21,6 +32,7 @@ class RightClickMenu extends React.Component{
 		}
 	}
 
+    // Hide the right click menu
 	hide(){
 		this.setState({
 			note: '',
@@ -31,6 +43,10 @@ class RightClickMenu extends React.Component{
 		})
 	}
 
+    // Show the right click meni
+    // INPUT - tag - the tag of the note that was right clicked
+    // INPUT - x - the x coordinate of the mouse click
+    // INPUT - y - the y coordinate of the mouse click
 	show(tag, x, y){
 		this.setState({
 			note: tag,
@@ -41,6 +57,9 @@ class RightClickMenu extends React.Component{
 		});
 	}
 
+    // Options a sub menu when an option is selected
+    // INPUT - e - the mouse event
+    // INPUT - option - a string representing the name of the open submenu
 	optionSelected(e, option){
 		e.stopPropagation();
 		this.setState((prevstate) => {
@@ -54,11 +73,15 @@ class RightClickMenu extends React.Component{
 		})
 	}
 
+    // Selects a color from a submenu and changes the note's color to that color
+    // INPUT - color - the string representing the name of the selected color
 	selectColor(color){
 		var newColor = ColorChart[color];
 		this.props.changeNoteColor(this.state.note, newColor);
     }
 
+    // Draws a sub menu
+    // INPUT - menu - a string representing which sub menu to draw
 	drawSubMenu(menu){
 		switch(menu){
 			case 'colors':
@@ -89,6 +112,7 @@ class RightClickMenu extends React.Component{
 		}
 	}
 
+    // Draws the right click menu
 	render(){
 		return(
 			<div className="menu" style={{

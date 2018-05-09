@@ -1,3 +1,7 @@
+/* routes.js
+* File for setting up url paths for the app. This handles urls users type in to the address bar, not the server.js file
+*/
+
 import React from 'react';
 import { BrowserRouter, Switch, Route, Redirect } from 'react-router-dom';
 

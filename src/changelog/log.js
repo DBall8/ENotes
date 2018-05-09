@@ -1,3 +1,7 @@
+/* log.js
+* A simple list of updates with a title, date, and description.
+*/
+
 module.exports=[
     {
         title: "Added refresh button and options button",

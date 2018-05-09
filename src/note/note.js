@@ -1,3 +1,7 @@
+/* note.js
+* A class for displaying an individual note
+*/
+
 import React from 'react';
 
 import resizeIm from '../resources/resize.png'
@@ -14,37 +18,44 @@ class Note extends React.Component{
         this.paste = this.paste.bind(this)
     }
 
+    // Handles the click on the plus button on the top of the note
 	addNote(e){
 		e.stopPropagation();
 		var n = this.props.note;
 		this.props.addNote(n.x + 100, n.y + 100);
 	}
 
+    // Handles the click on the x button on the top of the note
 	deleteNote(e){
 		e.stopPropagation();
 		this.props.deleteNote(this.props.tag);
 	}
 
+    // Handles any part of the note gaining focus
 	select(e){
 		this.props.selectNote(this.props.tag);
 	}
 
+    // Handles the top bar of the note being dragged, which moves the note
 	dragStart(e){
 		e.preventDefault();
 		this.props.dragStart(this.props.tag, e.screenX, e.screenY);
     }
 
+    // Handles the bottom right corner of the note being dragged, which resizes the note
     startResize(e) {
         e.preventDefault();
         this.props.resizeStart(this.props.tag, e.screenX, e.screenY);
     }
 
+    // handles any key inputs when the note is selected
     inputEvent(e) {
         this.props.updateNoteText(this.props.tag, e.target.value)
 	}
 
+    // filters key inputs for special keys
 	keyInput(e){
-		
+		// Override tab key to insert 4 spaces
 		if(e.key === 'Tab'){
 			var pos = this.contentArea.selectionStart;
 			e.preventDefault();
@@ -58,6 +69,7 @@ class Note extends React.Component{
 
     }
 
+    // Saves the selected text in this note when the copy option is selected from the custom right click menu
     copy() {
         var start = this.contentArea.selectionStart;
         var end = this.contentArea.selectionEnd;
@@ -66,6 +78,7 @@ class Note extends React.Component{
 
     }
 
+    // Writes the saved text to this note when the paste option is selected from the custom right click menu
     paste() {
         var start = this.contentArea.selectionStart;
         var end = this.contentArea.selectionEnd;
@@ -75,8 +88,11 @@ class Note extends React.Component{
         this.contentArea.value = text;
     }
 
+    // Launches the custom right click menu when the note is right clickeda
 	rightClick(e){
-	    var rightClick = false;
+        var rightClick = false; // If the right mouse button was pressed
+
+        // Check different browser implementations for if the right mouse button was pressed
 	    if("which" in e){
 	        //console.log("WHICH: " + e.which);
 	        rightClick = e.which == 3;
@@ -86,26 +102,36 @@ class Note extends React.Component{
 	        rightClick = e.button == 2;
 	    }
 
+        // If right mouse button was pressed, launch the custom right click menu
 		if(rightClick){
 		    e.stopPropagation();
 			this.props.launchOptions(this.props.tag, e.clientX, e.clientY);
 		}
 	}
 
+    // Gets the hex code for the body color of this note
+    // INPUT - colors - JSON object representing the colors of this note
+    // OUTPUT - a string representing the hex code for the body color
 	getBodyColor(colors){
 	    if(colors && colors.body){
 	        return colors.body;
-	    }
+        }
+        // return default yellow
 	    return '#ffe062';
 	}
 
+    // Gets the hex code for the head color of this note
+    // INPUT - colors - JSON object representing the colors of this note
+    // OUTPUT - a string representing the hex code for the head color
 	getHeadColor(colors){
-    	    if(colors && colors.head){
-    	        return colors.head;
-    	    }
-    	    return '#ddaf00';
-    	}
+    	if(colors && colors.head){
+    	    return colors.head;
+        }
+        // return default yellow
+    	return '#ddaf00';
+    }
 
+    // Draw the note
 	render(){
 		if(this.props.note == null){
 			return null;
