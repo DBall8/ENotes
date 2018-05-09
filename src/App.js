@@ -49,7 +49,7 @@ class App extends React.Component {
 
             // set up the socket for dynamic updating
             //const socket = socketIOClient("https://enotes.site", { secure: true });
-            const socket = socketIOClient("192.168.1.16:8080", { secure: true });
+            const socket = socketIOClient("130.215.249.227:8080", { secure: true });
 
             socket.on("ready", (socketid) => {
                 this.socketid = socketid;
@@ -326,7 +326,6 @@ class App extends React.Component {
         var note = notes[tag];
         note.content = content;
         note.saved = false;
-        this.unsaved = true;
         this.setState({ notes });
 
     }

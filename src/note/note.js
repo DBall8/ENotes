@@ -40,7 +40,7 @@ class Note extends React.Component{
     }
 
     inputEvent(e) {
-        this.props.changeNoteText(this.props.tag, e.target.value)
+        this.props.updateNoteText(this.props.tag, e.target.value)
 	}
 
 	keyInput(e){

@@ -16,6 +16,7 @@ class NotePage extends React.Component{
 
         this.dragStart = this.dragStart.bind(this);
         this.resizeStart = this.resizeStart.bind(this);
+        this.updateNoteText = this.updateNoteText.bind(this);
         this.copy = this.copy.bind(this);
         this.saveToMyClipboard = this.saveToMyClipboard.bind(this);
         this.retrieveFromMyClipboard = this.retrieveFromMyClipboard.bind(this);
@@ -147,6 +148,11 @@ class NotePage extends React.Component{
         this.resize = {};
     }
 
+    updateNoteText(tag, content) {
+        this.unsaved = true;
+        this.props.changeNoteText(tag, content);
+    }
+
     copy() {
         Object.keys(this.props.notes).map((t) => {
             var n = this.props.notes[t]
@@ -206,7 +212,7 @@ class NotePage extends React.Component{
                         selectNote={this.props.selectNote}
                         dragStart={this.dragStart}
                         resizeStart={this.resizeStart}
-                        changeNoteText={this.props.changeNoteText}
+                        updateNoteText={this.updateNoteText}
                         saveToMyClipboard={this.saveToMyClipboard}
                         retrieveFromMyClipboard={this.retrieveFromMyClipboard}
                         launchOptions={this.rightClickMenu.show}
