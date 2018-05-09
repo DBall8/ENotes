@@ -1,3 +1,7 @@
+/* server.js
+* This file launches a node.js server that servers the web application and handles user sessions and maintaining the database
+*/
+
 var http = require('http')
 	, https = require('https')
 	, fs = require('fs')
